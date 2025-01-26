@@ -1,21 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { ValidationPipe } from '@nestjs/common';
-import * as dotenv from 'dotenv';
-import type { INestApplication } from '@nestjs/common';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
-dotenv.config();
+let app: NestExpressApplication;
 
-let app: INestApplication | undefined;
-
-async function bootstrap(): Promise<INestApplication> {
+async function bootstrap() {
   if (!app) {
-    app = await NestFactory.create(AppModule);
-    
+    app = await NestFactory.create<NestExpressApplication>(AppModule);
+
     app.enableCors({
-      origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      origin: process.env.ALLOWED_ORIGINS?.split(",") || "*",
+      methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
       credentials: true,
     });
 
@@ -26,7 +22,7 @@ async function bootstrap(): Promise<INestApplication> {
         transformOptions: {
           enableImplicitConversion: true,
         },
-      }),
+      })
     );
 
     await app.init();
@@ -34,11 +30,26 @@ async function bootstrap(): Promise<INestApplication> {
   return app;
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
-  const app = await bootstrap();
-  const instance = app.getHttpAdapter().getInstance();
-  return instance(req, res);
-} 
+export default async function handler(req: any, res: any) {
+  try {
+    const app = await bootstrap();
+    const expressApp = app.getHttpAdapter().getInstance();
+    
+    // Log the request for debugging
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+
+    return new Promise((resolve, reject) => {
+      expressApp(req, res, (err: any) => {
+        if (err) {
+          console.error('Request error:', err);
+          reject(err);
+        }
+        resolve(undefined);
+      });
+    });
+  } catch (error) {
+    console.error('Handler error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
