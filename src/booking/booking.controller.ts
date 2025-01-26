@@ -9,7 +9,7 @@ import {
     Query, 
     UseGuards
   } from "@nestjs/common"
-  import { ParseDatePipe } from "@/common/pipes/parse-date.pipe"
+  import { ParseDatePipe } from "../common/pipes/parse-date.pipe"
   import { BookingService } from "./booking.service"
   import { JwtAuthGuard } from "@/auth/jwt-auth.guards"
   import { RolesGuard } from "@/auth/roles.guards"
