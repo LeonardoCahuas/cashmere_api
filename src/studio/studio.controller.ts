@@ -11,8 +11,8 @@ import {
   } from '@nestjs/common';
   import { StudioService } from './studio.service';
   import { CreateStudioDto, UpdateStudioDto } from './dto/studio.dto';
-  import { JwtAuthGuard } from '@/auth/jwt-auth.guards';
-  import { RolesGuard } from '@/auth/roles.guards';
+  import { JwtAuthGuard } from '../auth/jwt-auth.guards';
+  import { RolesGuard } from '../auth/roles.guards';
   import { Roles } from '../auth/roles.decorator';
   import { Role } from '@prisma/client';
   

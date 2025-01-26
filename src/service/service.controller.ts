@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Query } from "@nestjs/common"
 import { ServiceService } from "./service.service"
 import type { CreateServiceDto, UpdateServiceDto } from "./dto/service.dto"
-import { JwtAuthGuard } from "@/auth/jwt-auth.guards"
-import { RolesGuard } from "@/auth/roles.guards"
+import { JwtAuthGuard } from "../auth/jwt-auth.guards"
+import { RolesGuard } from "../auth/roles.guards"
 import { Roles } from "../auth/roles.decorator"
 import { Role } from "@prisma/client"
 

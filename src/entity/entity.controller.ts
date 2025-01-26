@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Query } from "@nestjs/common"
 import { EntityService } from "./entity.service"
 import type { CreateEntityDto, UpdateEntityDto } from "./dto/entity.dto"
-import { JwtAuthGuard } from "@/auth/jwt-auth.guards"
-import { RolesGuard } from "@/auth/roles.guards"
+import { JwtAuthGuard } from "../auth/jwt-auth.guards"
+import { RolesGuard } from "../auth/roles.guards"
 import { Roles } from "../auth/roles.decorator"
 import { Role } from "@prisma/client"
 
