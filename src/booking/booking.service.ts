@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common"
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreateBookingDto, UpdateBookingDto, BookingStatsResponse, BookingFilters } from "./dto/booking.dto"
-import { BookingFilters as BookingFilterUtil } from "@/utils/booking-filter.util"
+import { BookingFilters as BookingFilterUtil } from "../utils/booking-filter.util"
 import { type Booking, Role, type User, type Log } from "@prisma/client"
 
 

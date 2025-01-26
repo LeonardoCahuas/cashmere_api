@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreateEntityDto, UpdateEntityDto } from "./dto/entity.dto"
-import { BookingFilters } from "@/utils/booking-filter.util"
+import { BookingFilters } from "../utils/booking-filter.util"
 
 @Injectable()
 export class EntityService {
