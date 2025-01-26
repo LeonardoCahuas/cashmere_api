@@ -5,6 +5,7 @@ import { BookingFilters as BookingFilterUtil } from "@/utils/booking-filter.util
 import { type Booking, Role, type User, type Log } from "@prisma/client"
 
 
+
 type BookingWithRelations = Booking & {
   services: Array<{ id: string; price: number }>
   studio: { price: number }
