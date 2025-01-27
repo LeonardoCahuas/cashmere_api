@@ -35,7 +35,6 @@ export default async function handler(req: any, res: any) {
     const app = await bootstrap();
     const expressApp = app.getHttpAdapter().getInstance();
     
-    // Log the request for debugging
     console.log('Request body:', req.body);
     console.log('Request headers:', req.headers);
 

@@ -12,7 +12,7 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
+  async login(@Body() dto: any) {
     console.log(dto)
     const result = await this.authService.login(dto);
     console.log(result)

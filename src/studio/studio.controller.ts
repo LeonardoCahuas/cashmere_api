@@ -27,34 +27,32 @@ import {
       return this.studioService.create(createStudioDto);
     }
   
-    @Get('getAll')
+    @Get()
+    @Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
     findAll() {
+      console.log('Accessing findAll endpoint');
       return this.studioService.findAll();
     }
   
     @Get(':id')
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
     findOne(@Param('id') id: string) {
       return this.studioService.findOne(id);
     }
   
     @Put(':id')
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN)
     update(@Param('id') id: string, @Body() updateStudioDto: UpdateStudioDto) {
       return this.studioService.update(id, updateStudioDto);
     }
   
     @Delete(':id')
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN)
     remove(@Param('id') id: string) {
       return this.studioService.remove(id);
     }
   
     @Get(':id/availability')
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
     checkAvailability(
       @Param('id') id: string,

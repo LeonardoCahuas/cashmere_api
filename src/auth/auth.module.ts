@@ -14,10 +14,14 @@ import { Reflector } from "@nestjs/core"
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>("JWT_SECRET"),
-        signOptions: { expiresIn: "1d" },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>("JWT_SECRET");
+        console.log('Loading JWT_SECRET:', secret); // Debug log
+        return {
+          secret: secret,
+          signOptions: { expiresIn: "1d" },
+        };
+      },
       inject: [ConfigService],
     }),
   ],
