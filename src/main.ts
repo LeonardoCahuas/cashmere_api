@@ -1,20 +1,24 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
-import * as dotenv from "dotenv";
-import { NestExpressApplication } from '@nestjs/platform-express';
-
-dotenv.config();
+import { NestFactory } from "@nestjs/core"
+import { AppModule } from "./app.module"
+import { ValidationPipe } from "@nestjs/common"
+import { json } from "express"
+import * as cookieParser from "cookie-parser"
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule)
 
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || "*",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
-  });
+  })
 
+  // Cookie parser middleware
+  app.use(cookieParser())
+
+  // Increase JSON payload limit
+  app.use(json({ limit: "50mb" }))
+
+  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,22 +26,14 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
-    })
-  );
+    }),
+  )
 
-  if (process.env.NODE_ENV !== "production") {
-    const port = process.env.PORT || 3000;
-    await app.listen(port);
-    console.log(`Application is running on: http://localhost:${port}`);
-  }
-
-  return app;
+  const port = process.env.PORT || 3005
+  await app.listen(port)
 }
 
-// For local development
-if (process.env.NODE_ENV !== "production") {
-  bootstrap();
-}
+bootstrap()
 
-// For Vercel
-export default bootstrap;
+export default bootstrap
+

@@ -1,36 +1,41 @@
 import { ExtractJwt, Strategy } from "passport-jwt"
 import { PassportStrategy } from "@nestjs/passport"
 import { Injectable, UnauthorizedException } from "@nestjs/common"
-import { ConfigService } from "@nestjs/config"
+import type { Request } from "express"
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private configService: ConfigService) {
-    const secret = configService.get<string>("JWT_SECRET");
-    console.log('JwtStrategy - Using secret:', secret); // Debug log
-    
+  constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          // First try to get token from cookie
+          const token = request?.cookies?.token
+          if (token) return token
+
+          // Fallback to Authorization header
+          const authHeader = request?.headers?.authorization
+          if (authHeader && authHeader.split(" ")[0] === "Bearer") {
+            return authHeader.split(" ")[1]
+          }
+          return null
+        },
+      ]),
       ignoreExpiration: false,
-      secretOrKey: secret,
-    });
+      secretOrKey: process.env.JWT_SECRET,
+    })
   }
 
   async validate(payload: any) {
-    console.log('JwtStrategy - Validating payload:', payload);
-    
     if (!payload) {
-      throw new UnauthorizedException('Invalid token payload');
+      throw new UnauthorizedException()
     }
 
-    const user = {
+    return {
       id: payload.sub,
-      username: payload.username,
+      email: payload.email,
       role: payload.role,
-    };
-
-    console.log('JwtStrategy - Validated user:', user);
-    return user;
+    }
   }
 }
 

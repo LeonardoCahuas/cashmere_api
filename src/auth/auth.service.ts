@@ -2,16 +2,31 @@ import { Injectable, UnauthorizedException } from "@nestjs/common"
 import { JwtService } from "@nestjs/jwt"
 import { PrismaService } from "../prisma/prisma.service"
 import * as bcrypt from "bcrypt"
-import type { RegisterDto, LoginDto } from "./dto/auth.dto"
+import type { RegisterDto, LoginDto, GoogleLoginDto } from "./dto/auth.dto"
+import { createClient } from "@supabase/supabase-js"
+import type { Response } from "express"
+import { cookieConfig } from "../common/config/cookie.config"
 
 @Injectable()
 export class AuthService {
+  private supabase
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) { }
+  ) {
+    this.supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!)
+  }
 
-  async register(dto: RegisterDto) {
+  private setTokenCookie(res: Response, token: string) {
+    res.cookie("token", token, cookieConfig)
+  }
+
+  private clearTokenCookie(res: Response) {
+    res.clearCookie("token", cookieConfig)
+  }
+
+  async register(dto: RegisterDto, res: Response) {
     const hashedPassword = await bcrypt.hash(dto.password, 10)
 
     const user = await this.prisma.user.create({
@@ -19,7 +34,7 @@ export class AuthService {
         username: dto.username,
         password: hashedPassword,
         phone: dto.phone,
-        role: "USER", // Default role
+        role: "USER",
       },
     })
 
@@ -29,8 +44,9 @@ export class AuthService {
       role: user.role,
     })
 
+    this.setTokenCookie(res, token)
+
     return {
-      token,
       user: {
         id: user.id,
         username: user.username,
@@ -39,61 +55,86 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, res: Response) {
+    const user = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    })
+
+    if (!user) {
+      throw new UnauthorizedException("Invalid credentials")
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password)
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException("Invalid credentials")
+    }
+
+    const token = this.jwtService.sign({
+      sub: user.id,
+      username: user.username,
+      role: user.role,
+    })
+
+    this.setTokenCookie(res, token)
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+    }
+  }
+
+  async googleLogin(dto: GoogleLoginDto, res: Response) {
     try {
-      // Let's log the entire DTO first
-      console.log("Received DTO:", JSON.stringify(dto, null, 2));
+      const {
+        data: { user: supabaseUser },
+        error,
+      } = await this.supabase.auth.getUser(dto.supabaseToken)
 
-      // Check if username exists and log its value
-      console.log("Username value:", dto?.username);
-
-      if (!dto.username) {
-        console.log("Username check failed - throwing UnauthorizedException");
-        throw new UnauthorizedException("Username is required");
+      if (error || !supabaseUser || !supabaseUser.email) {
+        throw new UnauthorizedException("Invalid Supabase token")
       }
 
-      console.log("ciao - passed username check");
-
-      // Rest of your code...
-      const user = await this.prisma.user.findUnique({
-        where: {
-          username: dto.username,
-        },
-      });
-
-      console.log("Found user:", user ? "yes" : "no");
+      let user = await this.prisma.user.findUnique({
+        where: { username: supabaseUser.email },
+      })
 
       if (!user) {
-        throw new UnauthorizedException("Invalid credentials");
-      }
-      console.log("prova pass")
-      console.log(dto)
-      console.log(user)
-      const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-      console.log("Password valid:", isPasswordValid);
-
-      if (!isPasswordValid) {
-        throw new UnauthorizedException("Invalid credentials");
+        user = await this.prisma.user.create({
+          data: {
+            username: supabaseUser.email,
+            password: await bcrypt.hash(Math.random().toString(36), 10),
+            role: "USER",
+          },
+        })
       }
 
       const token = this.jwtService.sign({
         sub: user.id,
-        username: user.username,
+        email: user.username,
         role: user.role,
-      });
+      })
+
+      this.setTokenCookie(res, token)
 
       return {
-        token,
         user: {
           id: user.id,
           username: user.username,
           role: user.role,
         },
-      };
+      }
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      throw new UnauthorizedException("Failed to verify Google login")
     }
+  }
+
+  async logout(res: Response) {
+    this.clearTokenCookie(res)
+    return { message: "Logged out successfully" }
   }
 }
 
