@@ -15,7 +15,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {
-    this.supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!)
+    this.supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_KEY!)
   }
 
   private setTokenCookie(res: Response, token: string) {
