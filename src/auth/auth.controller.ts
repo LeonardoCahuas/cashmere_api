@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseInterceptors, Res, UseGuards } from "@nestjs
 import type { Response } from "express"
 import { AuthService } from "./auth.service"
 import { type RegisterDto, type LoginDto, LoginResponseDto, type GoogleLoginDto } from "./dto/auth.dto"
-import { TransformInterceptor } from "@/common/interceptors/transform.interceptors"
+import { TransformInterceptor } from "../common/interceptors/transform.interceptors"
 import { ValidationPipe } from "@nestjs/common"
 import { JwtAuthGuard } from "./jwt-auth.guards"
 
