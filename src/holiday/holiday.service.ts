@@ -1,15 +1,21 @@
 import { Injectable, NotFoundException } from "@nestjs/common"
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreateHolidayDto, UpdateHolidayDto } from "./dto/holiday.dto"
+import { HolidayState } from "@prisma/client"
 
 @Injectable()
 export class HolidayService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, data: CreateHolidayDto) {
+
+    console.log(data)
     return this.prisma.holiday.create({
       data: {
-        ...data,
+        start: data.start,
+        end:data.end,
+        reason:data.reason,
+        type:data.type,
         user: { connect: { id: userId } },
       },
     })
@@ -17,7 +23,9 @@ export class HolidayService {
 
   async findAll(userId?: string) {
     return this.prisma.holiday.findMany({
-      where: userId ? { userId } : undefined,
+      where: {
+        state: HolidayState.CONFERMARE
+      },
       include: {
         user: true,
       },

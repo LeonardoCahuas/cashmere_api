@@ -72,7 +72,7 @@ export class BookingService {
 
     return this.prisma.booking.findMany({
       where: {
-        state: BookingState.CONFERMATO
+        state: BookingState.CONTATTARE
       },
       include: {
         services: true,
@@ -358,11 +358,25 @@ export class BookingService {
       },
     });
   }
-  
-  async findByState(state: BookingState) {
+
+  async findToConfirm(): Promise<BookingWithRelations[]> {
+    //const filters: BookingFilters = BookingFilterUtil.createBookingFilters(query)
+
+    /* switch (user.role) {
+      case Role.USER:
+        filters.userId = user.id
+        break
+      case Role.ENGINEER:
+        filters.fonicoId = user.id
+        break
+      case Role.SECRETARY:
+      case Role.ADMIN:
+        break
+    } */
+
     return this.prisma.booking.findMany({
       where: {
-        state: state
+        state: BookingState.CONFERMATO
       },
       include: {
         services: true,

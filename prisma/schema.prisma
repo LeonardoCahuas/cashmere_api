@@ -77,11 +77,13 @@ model Availability {
 
 model Holiday {
   id        String    @id @default(cuid())
-  start     DateTime  @db.Date
-  end       DateTime  @db.Date
+  start     DateTime  
+  end       DateTime  
   reason    String
   user      User      @relation(fields: [userId], references: [id])
   userId    String
+  state     HolidayState @default(CONFERMARE)
+  type      HolidayType @default(PERMESSO)
 }
 
 model Log {
@@ -107,11 +109,23 @@ enum BookingState {
   CONTATTARE
   CONTATTATO
   CONFERMATO
+  ANNULLATO
 }
 
 enum LogAction {
   INSERT
   UPDATE
   DELETE
+}
+
+enum HolidayType {
+  FERIE
+  PERMESSO
+}
+
+enum HolidayState {
+  CONFERMARE
+  CONFERMATO
+  ANNULLATO
 }
 

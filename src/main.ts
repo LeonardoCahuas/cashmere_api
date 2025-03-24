@@ -15,6 +15,8 @@ async function bootstrap() {
   // Cookie parser middleware
   app.use(cookieParser())
 
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
   // Increase JSON payload limit
   app.use(json({ limit: "50mb" }))
 

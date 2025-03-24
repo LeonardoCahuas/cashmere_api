@@ -7,7 +7,8 @@ import {
   Body,
   Param,
   Query,
-  UseGuards
+  UseGuards,
+  ParseEnumPipe
 } from "@nestjs/common"
 import { ParseDatePipe } from "../common/pipes/parse-date.pipe"
 import { BookingService } from "./booking.service"
@@ -21,7 +22,8 @@ import {
   UpdateBookingDto,
   UpdateBookingStateDto
 } from "./dto/booking.dto"
-import {StateType} from '../../utils/types'
+import { Request } from "express";
+import { StateType } from '../../utils/types'
 
 @Controller("booking")
 export class BookingController {
@@ -61,15 +63,14 @@ export class BookingController {
   }
 
 
-  /* @Put(":id/state")
-  @Roles(Role.SECRETARY, Role.ADMIN)
+  @Put(":id/:state")
+  //@Roles(Role.SECRETARY, Role.ADMIN)
   async updateBookingState(
     @Param("id") id: string,
-    @Body() dto: UpdateBookingStateDto,
-    @User() user: any
+    @Param("state", new ParseEnumPipe(BookingState)) state: BookingState
   ) {
-    return this.bookingService.update(id, { state: dto.state }, user.id)
-  } */
+    return this.bookingService.update(id, { state: state })
+  } 
 
   @Delete(":id")
   //@Roles(Role.SECRETARY, Role.ADMIN)
@@ -124,9 +125,13 @@ export class BookingController {
   async getBookingHistory(@Param("id") id: string) {
     return this.bookingService.getBookingHistory(id)
   }
-  
+
   @Get("confirm")
-  findEngineers() {
-    return this.bookingService.findByState(BookingState.CONTATTARE)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  async getToConfirm(
+    @User() user: any,
+    @Query() query: any
+  ) {
+    return this.bookingService.findAll()
   }
 }
