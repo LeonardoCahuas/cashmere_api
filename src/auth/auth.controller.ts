@@ -1,7 +1,7 @@
-import { Controller, Post, Body, UseInterceptors, Res, UseGuards } from "@nestjs/common"
+import { Controller, Post, Body, UseInterceptors, Res, UseGuards, HttpCode, HttpStatus } from "@nestjs/common"
 import type { Response } from "express"
 import { AuthService } from "./auth.service"
-import { type RegisterDto, type LoginDto, LoginResponseDto, type GoogleLoginDto } from "./dto/auth.dto"
+import { type RegisterDto,  LoginDto, LoginResponseDto, type GoogleLoginDto, GoogleDto } from "./dto/auth.dto"
 import { TransformInterceptor } from "../common/interceptors/transform.interceptors"
 import { ValidationPipe } from "@nestjs/common"
 import { JwtAuthGuard } from "./jwt-auth.guards"
@@ -17,15 +17,16 @@ export class AuthController {
   }
 
   @Post("login")
-  @UseInterceptors(new TransformInterceptor(LoginResponseDto))
-  async login(@Body(new ValidationPipe()) dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    return this.authService.login(dto, res)
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() loginData: LoginDto, @Res({ passthrough: true }) res: Response) {
+    console.log(loginData)
+    return this.authService.login(loginData, res)
   }
 
   @Post("google")
-  @UseInterceptors(new TransformInterceptor(LoginResponseDto))
-  async googleLogin(@Body(new ValidationPipe()) dto: GoogleLoginDto, @Res({ passthrough: true }) res: Response) {
-    return this.authService.googleLogin(dto, res)
+  @HttpCode(HttpStatus.OK)
+  async googleLogin(@Body(new ValidationPipe()) googleLoginData: GoogleDto, @Res({ passthrough: true }) res: Response) {
+    return this.authService.googleLogin(googleLoginData, res)
   }
 
   @Post('logout')

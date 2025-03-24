@@ -106,6 +106,7 @@ enum Role {
 enum BookingState {
   CONTATTARE
   CONTATTATO
+  CONFERMATO
 }
 
 enum LogAction {

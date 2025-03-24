@@ -1,7 +1,7 @@
 import { 
-    startOfDay, 
-    endOfDay, 
-    isWithinInterval, 
+    startOfDay,
+    endOfDay,
+    isWithinInterval,
     areIntervalsOverlapping,
     parseISO,
     format 

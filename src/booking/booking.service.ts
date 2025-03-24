@@ -2,9 +2,8 @@ import { Injectable, BadRequestException, NotFoundException } from "@nestjs/comm
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreateBookingDto, UpdateBookingDto, BookingStatsResponse, BookingFilters } from "./dto/booking.dto"
 import { BookingFilters as BookingFilterUtil } from "../utils/booking-filter.util"
-import { type Booking, Role, type User, type Log } from "@prisma/client"
-
-
+import { type Booking, Role, type User, type Log, BookingState } from "@prisma/client"
+import { StateType } from "utils/types"
 
 type BookingWithRelations = Booking & {
   services: Array<{ id: string; price: number }>
@@ -26,36 +25,40 @@ export class BookingService {
       this.prisma,
     )
 
-    if (!isAvailable) {
+    /* if (!isAvailable) {
       throw new BadRequestException("Time slot not available")
-    }
+    } */
 
-    return this.prisma.booking.create({
-      data: {
-        start: data.start,
-        end: data.end,
-        notes: data.notes,
-        user: { connect: { id: data.userId } },
-        fonico: { connect: { id: data.fonicoId } },
-        studio: { connect: { id: data.studioId } },
-        services: {
-          connect: data.services.map((id) => ({ id })),
+      console.log(data)
+      console.log(userId)
+
+      return this.prisma.booking.create({
+        data: {
+          start: data.start,
+          end: data.end,
+          state: data.state,
+          notes: data.notes ?? null,
+          studio: { connect: { id: data.studioId } },
+          services: {
+            connect: data.services?.map((id) => ({ id })) ?? [],
+          },
+          user: { connect: { id: 'cm6ry32iu0000xz076yvedk6k' } },
+          fonico: { connect: { id: 'cm6ds8hq80000w6d2y9ttjh7x' } },
+          booked_by: userId ? { connect: { id: userId } } : undefined as any,
         },
-        booked_by: { connect: { id: userId } },
-      },
-      include: {
-        services: true,
-        studio: true,
-        fonico: true,
-        user: true,
-      },
-    })
+        include: {
+          services: true,
+          studio: true,
+          fonico: true,
+          user: true,
+        },
+      });  
   }
 
-  async findAll(user: User, query: any): Promise<BookingWithRelations[]> {
-    const filters: BookingFilters = BookingFilterUtil.createBookingFilters(query)
+  async findAll(): Promise<BookingWithRelations[]> {
+    //const filters: BookingFilters = BookingFilterUtil.createBookingFilters(query)
 
-    switch (user.role) {
+    /* switch (user.role) {
       case Role.USER:
         filters.userId = user.id
         break
@@ -65,10 +68,12 @@ export class BookingService {
       case Role.SECRETARY:
       case Role.ADMIN:
         break
-    }
+    } */
 
     return this.prisma.booking.findMany({
-      where: filters,
+      where: {
+        state: BookingState.CONFERMATO
+      },
       include: {
         services: true,
         studio: true,
@@ -97,63 +102,6 @@ export class BookingService {
     }
 
     return booking
-  }
-
-  async update(id: string, data: UpdateBookingDto, userId: string): Promise<BookingWithRelations> {
-    const booking = await this.findOne(id)
-
-    if (
-      data.start !== booking.start ||
-      data.end !== booking.end ||
-      data.studioId !== booking.studioId ||
-      data.fonicoId !== booking.fonicoId
-    ) {
-      const isAvailable = await BookingFilterUtil.checkStudioAvailability(
-        data.studioId || booking.studioId,
-        data.fonicoId || booking.fonicoId,
-        data.start || booking.start,
-        data.end || booking.end,
-        this.prisma,
-        id,
-      )
-
-      if (!isAvailable) {
-        throw new BadRequestException("Time slot not available")
-      }
-    }
-
-    await this.prisma.log.create({
-      data: {
-        action: "UPDATE",
-        userId,
-        bookingId: id,
-        oldBooking: JSON.parse(JSON.stringify(booking)),
-        newBooking: JSON.parse(JSON.stringify(data)),
-      },
-    })
-
-    return this.prisma.booking.update({
-      where: { id },
-      data: {
-        start: data.start,
-        end: data.end,
-        notes: data.notes,
-        fonico: data.fonicoId ? { connect: { id: data.fonicoId } } : undefined,
-        studio: data.studioId ? { connect: { id: data.studioId } } : undefined,
-        services: data.services
-          ? {
-              set: data.services.map((id) => ({ id })),
-            }
-          : undefined,
-        state: data.state,
-      },
-      include: {
-        services: true,
-        studio: true,
-        fonico: true,
-        user: true,
-      },
-    })
   }
 
   async remove(id: string, userId: string): Promise<Booking> {
@@ -362,6 +310,70 @@ export class BookingService {
           }
         : undefined,
     }))
+  }
+
+  async update(id: string, data: UpdateBookingDto): Promise<BookingWithRelations> {
+    const booking = await this.findOne(id);
+  
+    if (
+      data.start !== booking.start ||
+      data.end !== booking.end ||
+      data.studioId !== booking.studioId ||
+      data.fonicoId !== booking.fonicoId
+    ) {
+      const isAvailable = await BookingFilterUtil.checkStudioAvailability(
+        data.studioId || booking.studioId,
+        data.fonicoId || booking.fonicoId,
+        data.start || booking.start,
+        data.end || booking.end,
+        this.prisma,
+        id
+      );
+  
+      /* if (!isAvailable) {
+        throw new BadRequestException("Time slot not available");
+      } */
+    }
+  
+    return this.prisma.booking.update({
+      where: { id },
+      data: {
+        start: data.start,
+        end: data.end,
+        notes: data.notes,
+        fonico: data.fonicoId ? { connect: { id: data.fonicoId } } : undefined,
+        studio: data.studioId ? { connect: { id: data.studioId } } : undefined,
+        services: data.services
+          ? {
+              set: data.services.map((id) => ({ id })),
+            }
+          : undefined,
+        state: data.state,
+      },
+      include: {
+        services: true,
+        studio: true,
+        fonico: true,
+        user: true,
+      },
+    });
+  }
+  
+  async findByState(state: BookingState) {
+    return this.prisma.booking.findMany({
+      where: {
+        state: state
+      },
+      include: {
+        services: true,
+        studio: true,
+        fonico: true,
+        user: true,
+      },
+      orderBy: {
+        start: "asc",
+      },
+    })
   }
 }
 

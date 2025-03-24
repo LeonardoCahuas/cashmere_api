@@ -27,6 +27,10 @@ export class CreateBookingDto {
   @IsString()
   @IsOptional()
   notes?: string
+  
+  @IsEnum(BookingState)
+  @IsOptional()
+  state?: BookingState
 }
 
 export class UpdateBookingDto {

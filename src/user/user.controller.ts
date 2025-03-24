@@ -7,7 +7,7 @@ import { Role } from "@prisma/client"
 import type { CreateUserDto, UpdateUserDto } from "./dto/user.dto"
 
 @Controller("users")
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
   constructor(private userService: UserService) {}
 
@@ -39,5 +39,15 @@ export class UserController {
   @Roles(Role.ADMIN)
   remove(@Param("id") id: string) {
     return this.userService.remove(id)
+  }
+
+  @Get("role/engineer")
+  findEngineers() {
+    return this.userService.findByRole(Role.ENGINEER)
+  }
+
+  @Get("role/user")
+  findUsers() {
+    return this.userService.findByRole(Role.USER)
   }
 }

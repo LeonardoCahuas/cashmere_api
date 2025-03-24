@@ -21,7 +21,7 @@ export class AvailabilityController {
   }
 
   @Post()
-  @Roles("ENGINEER")
+  @Roles("ENGINEER", "ADMIN")
   async createAvailability(@Body() dto: CreateAvailabilityDto, @User() user: any) {
     return this.availabilityService.createAvailability(user.id, dto)
   }

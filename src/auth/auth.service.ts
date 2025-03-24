@@ -58,42 +58,41 @@ export class AuthService {
   async login(dto: LoginDto, res: Response) {
     const user = await this.prisma.user.findUnique({
       where: { username: dto.username },
-    })
-
+    });
+    console.log("eccolo")
+    console.log(dto)
     if (!user) {
-      throw new UnauthorizedException("Invalid credentials")
+      throw new UnauthorizedException("Invalid credentials");
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password)
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Invalid credentials")
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     const token = this.jwtService.sign({
       sub: user.id,
       username: user.username,
       role: user.role,
-    })
+    });
 
-    this.setTokenCookie(res, token)
+    this.setTokenCookie(res, token);
 
     return {
       user: {
         id: user.id,
-        username: user.username,
+        email: user.username,
         role: user.role,
-      },
+      }
     }
   }
-
   async googleLogin(dto: GoogleLoginDto, res: Response) {
     try {
       const {
         data: { user: supabaseUser },
         error,
       } = await this.supabase.auth.getUser(dto.supabaseToken)
-
       if (error || !supabaseUser || !supabaseUser.email) {
         throw new UnauthorizedException("Invalid Supabase token")
       }
@@ -101,7 +100,7 @@ export class AuthService {
       let user = await this.prisma.user.findUnique({
         where: { username: supabaseUser.email },
       })
-
+      console.log(user)
       if (!user) {
         user = await this.prisma.user.create({
           data: {
@@ -120,13 +119,13 @@ export class AuthService {
 
       this.setTokenCookie(res, token)
 
-      return {
+      return res.status(200).json({
         user: {
           id: user.id,
           username: user.username,
           role: user.role,
         },
-      }
+      });
     } catch (error) {
       throw new UnauthorizedException("Failed to verify Google login")
     }

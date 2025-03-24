@@ -24,11 +24,21 @@ export class LoginDto {
 export class GoogleLoginDto {
   @Expose()
   @IsString()
+  @Transform(({ obj }) => ({
+    token: obj.supabaseToken
+  }))
   supabaseToken: string
 }
+
+export class GoogleDto{
+  @IsString()
+  supabaseToken: string
+}
+
 export class LoginResponseDto {
   @Expose()
-  token: string
+  @IsString()
+  supabaseToken: string
 
   @Expose()
   @Transform(({ obj }) => ({

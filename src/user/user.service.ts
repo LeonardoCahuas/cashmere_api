@@ -2,10 +2,11 @@ import { Injectable, NotFoundException, ConflictException } from "@nestjs/common
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreateUserDto, UpdateUserDto } from "./dto/user.dto"
 import * as bcrypt from "bcrypt"
+import { RoleType } from '../../utils/types'
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(data: CreateUserDto) {
     const existingUser = await this.prisma.user.findUnique({
@@ -70,6 +71,17 @@ export class UserService {
 
     return this.prisma.user.delete({
       where: { id },
+    })
+  }
+
+  async findByRole(role: RoleType) {
+    return this.prisma.user.findMany({
+      where: {
+        role: role,
+      },
+      include: {
+        entity: true,
+      },
     })
   }
 }
