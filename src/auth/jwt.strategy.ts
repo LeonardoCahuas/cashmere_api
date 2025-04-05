@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request): string | null => {  // Aggiungi tipo esplicito
+        (request: Request): string => {  // Aggiungi tipo esplicito
           // First try to get token from cookie
           const token = request?.cookies?.token
           if (token) {
@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           }
 
           console.log("Nessun token trovato")
-          return null
+          return ""
         },
       ]) as JwtFromRequestFunction,  // Cast esplicito per il tipo
       ignoreExpiration: false,
