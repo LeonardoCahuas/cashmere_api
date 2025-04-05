@@ -22,38 +22,38 @@ import {
     constructor(private readonly studioService: StudioService) {}
   
     @Post()
-    @Roles(Role.ADMIN)
+    //@Roles(Role.ADMIN)
     create(@Body() createStudioDto: CreateStudioDto) {
       return this.studioService.create(createStudioDto);
     }
   
     @Get()
-    @Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
+    //@Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
     findAll() {
       console.log('Accessing findAll endpoint');
       return this.studioService.findAll();
     }
   
     @Get(':id')
-    @Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
+    //@Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
     findOne(@Param('id') id: string) {
       return this.studioService.findOne(id);
     }
   
     @Put(':id')
-    @Roles(Role.ADMIN)
+    //@Roles(Role.ADMIN)
     update(@Param('id') id: string, @Body() updateStudioDto: UpdateStudioDto) {
       return this.studioService.update(id, updateStudioDto);
     }
   
     @Delete(':id')
-    @Roles(Role.ADMIN)
+    //@Roles(Role.ADMIN)
     remove(@Param('id') id: string) {
       return this.studioService.remove(id);
     }
   
     @Get(':id/availability')
-    @Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
+    //@Roles(Role.ADMIN, Role.SECRETARY, Role.USER, Role.ENGINEER)
     checkAvailability(
       @Param('id') id: string,
       @Query('start') start: string,

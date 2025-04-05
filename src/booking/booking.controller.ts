@@ -49,7 +49,7 @@ export class BookingController {
   }
 
   @Get()
-  @Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
   async getBookings(
     @User() user: any,
     @Query() query: any
@@ -58,7 +58,7 @@ export class BookingController {
   }
 
   @Get("confirm")
-  @Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
   async getToConfirm(
     @User() user: any,
     @Query() query: any
@@ -67,7 +67,7 @@ export class BookingController {
   }
 
   @Get("current")
-  @Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
   async getCurrentBookings() {
     return this.bookingService.findCurrentBookings()
   }
@@ -78,23 +78,24 @@ export class BookingController {
   }
 
   @Get("available-slots")
-  @Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
   async getAvailableTimeSlots(@Query("studioId") studioId: string, @Query("fonicoId") fonicoId: string) {
     return this.bookingService.findAvailableTimeSlots(studioId, fonicoId)
   }
+  
   @Get("available-engineers")
   async getAvailableEngineers(@Query("start", ParseDatePipe) start: Date, @Query("end", ParseDatePipe) end: Date): Promise<EngineerAvailability[]> {
     return this.bookingService.findAvailableEngineers(start, end)
   }
 
   @Get(":id")
-  @Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
   async getBooking(@Param("id") id: string) {
     return this.bookingService.findOne(id)
   }
 
   @Get("fonico/:id")
-  @Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
+  //@Roles(Role.USER, Role.SECRETARY, Role.ADMIN, Role.ENGINEER)
   async getFonicoBookings(@Param("id") id: string) {
     return this.bookingService.findEngineerBookings(id)
   }
@@ -111,7 +112,7 @@ export class BookingController {
 
 
   @Put(":id/:state")
-  @Roles(Role.SECRETARY, Role.ADMIN)
+  //@Roles(Role.SECRETARY, Role.ADMIN)
   async updateBookingState(
     @Param("id") id: string,
     @Param("state", new ParseEnumPipe(BookingState)) state: BookingState
@@ -120,7 +121,7 @@ export class BookingController {
   } 
 
   @Delete(":id")
-  @Roles(Role.SECRETARY, Role.ADMIN)
+  //@Roles(Role.SECRETARY, Role.ADMIN)
   async deleteBooking(
     @Param("id") id: string
     //@User() user: any
@@ -129,7 +130,7 @@ export class BookingController {
   }
 
   /* @Get("stats")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   async getBookingStats(
     @Query("startDate", ParseDatePipe) startDate: Date,
     @Query("endDate", ParseDatePipe) endDate: Date
@@ -138,7 +139,7 @@ export class BookingController {
   } */
 
   @Get("entity/:entityId")
-  @Roles(Role.ADMIN, Role.SECRETARY)
+  //@Roles(Role.ADMIN, Role.SECRETARY)
   async getBookingsByEntity(
     @Param("entityId") entityId: string,
     @Query("startDate", ParseDatePipe) startDate?: Date,
@@ -148,7 +149,7 @@ export class BookingController {
   }
 
   @Get("fonico/:fonicoId")
-  @Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
+  //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
   async getBookingsByFonico(
     @Param("fonicoId") fonicoId: string,
     @Query("startDate", ParseDatePipe) startDate?: Date,
@@ -158,7 +159,7 @@ export class BookingController {
   }
 
   @Get("user/:userId")
-  @Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
+  //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
   async getBookingsByUser(
     @Param("fonicoId") fonicoId: string
   ) {
@@ -166,7 +167,7 @@ export class BookingController {
   }
 
   @Get("studio/:studioId")
-  @Roles(Role.ADMIN, Role.SECRETARY)
+  //@Roles(Role.ADMIN, Role.SECRETARY)
   async getBookingsByStudio(
     @Param("studioId") studioId: string,
     @Query("startDate", ParseDatePipe) startDate?: Date,
@@ -176,7 +177,7 @@ export class BookingController {
   }
 
   @Get(":id/history")
-  @Roles(Role.ADMIN, Role.SECRETARY)
+  //@Roles(Role.ADMIN, Role.SECRETARY)
   async getBookingHistory(@Param("id") id: string) {
     return this.bookingService.getBookingHistory(id)
   }

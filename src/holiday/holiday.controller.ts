@@ -23,37 +23,37 @@ export class HolidayController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.SECRETARY)
+  //@Roles(Role.ADMIN, Role.SECRETARY)
   findAll() {
     return this.holidayService.findAll()
   }
 
   @Get("/user/:userId")
-  @Roles(Role.ADMIN, Role.SECRETARY)
+  //@Roles(Role.ADMIN, Role.SECRETARY)
   findUserHoliday(@Param("userId") userId: string) {
     return this.holidayService.findUserHoliday(userId)
   }
 
   @Get(":id")
-  @Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
+  //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
   findOne(@Param("id") id: string) {
     return this.holidayService.findOne(id)
   }
 
   @Put(":id")
-  @Roles(Role.ENGINEER)
+  //@Roles(Role.ENGINEER)
   update(@Param("id") id: string, @Body() dto: UpdateHolidayDto) {
     return this.holidayService.update(id, dto)
   }
 
   @Delete(":id")
-  @Roles(Role.ENGINEER)
+  //@Roles(Role.ENGINEER)
   remove(@Param("id") id: string) {
     return this.holidayService.remove(id)
   }
 
   @Put(":id/:state")
-  @Roles(Role.SECRETARY, Role.ADMIN)
+  //@Roles(Role.SECRETARY, Role.ADMIN)
   async updateBookingState(
     @Param("id") id: string,
     @Param("state", new ParseEnumPipe(HolidayState)) state: HolidayState

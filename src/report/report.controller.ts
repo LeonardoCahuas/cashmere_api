@@ -21,25 +21,25 @@ export class ReportController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.SECRETARY)
+  //@Roles(Role.ADMIN, Role.SECRETARY)
   findAll() {
     return this.reportService.findAll()
   }
 
   @Get(":id")
-  @Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
+  //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
   findOne(@Param("id") id: string) {
     return this.reportService.findOne(id)
   }
 
   /* @Put(":id")
-  @Roles(Role.ENGINEER)
+  //@Roles(Role.ENGINEER)
   update(@Param("id") id: string, @Body() dto: UpdateReportDto) {
     return this.reportService.update(id, dto)
   } */
 
   @Delete(":id")
-  @Roles(Role.ENGINEER)
+  //@Roles(Role.ENGINEER)
   remove(@Param("id") id: string) {
     return this.reportService.remove(id)
   }

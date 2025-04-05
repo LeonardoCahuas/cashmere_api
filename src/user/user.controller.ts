@@ -12,49 +12,49 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   create(@Body() dto: CreateUserDto) {
     return this.userService.create(dto)
   }
 
   @Get()
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   findAll() {
     return this.userService.findAll()
   }
 
   @Get("/all")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   findAllUsers() {
     return this.userService.findAllUsers()
   }
 
   @Get(":id")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   findOne(@Param("id") id: string) {
     return this.userService.findOne(id)
   }
 
   @Put(":id")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   update(@Param("id") id: string, @Body() dto: UpdateUserDto) {
     return this.userService.update(id, dto)
   }
 
   @Put(":id/:role")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   updateRole(@Param("id") id: string, @Param("role") role: Role) {
     return this.userService.updateRole(id, role)
   }
 
   @Put("/entity/:id/:entity")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   updateEntity(@Param("id") id: string, @Param("entity") entity: string) {
     return this.userService.updateEntity(id, entity)
   }
 
   @Delete(":id")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   remove(@Param("id") id: string) {
     return this.userService.remove(id)
   }

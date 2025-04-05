@@ -12,25 +12,25 @@ export class LogController {
   constructor(private logService: LogService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   create(@Body() dto: CreateLogDto) {
     return this.logService.create(dto)
   }
 
   @Get()
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   findAll() {
     return this.logService.findAll()
   }
 
   @Get("booking/:bookingId")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   findByBooking(@Param("bookingId") bookingId: string) {
     return this.logService.findByBooking(bookingId)
   }
 
   @Get("user/:userId")
-  @Roles(Role.ADMIN)
+  //@Roles(Role.ADMIN)
   findByUser(@Param("userId") userId: string) {
     return this.logService.findByUser(userId)
   }
