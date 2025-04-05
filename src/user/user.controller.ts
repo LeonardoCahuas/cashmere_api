@@ -7,7 +7,7 @@ import { Role } from "@prisma/client"
 import type { CreateUserDto, UpdateUserDto } from "./dto/user.dto"
 
 @Controller("users")
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
   constructor(private userService: UserService) {}
 
