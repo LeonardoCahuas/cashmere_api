@@ -1,4 +1,4 @@
-import { ExtractJwt, Strategy } from "passport-jwt"
+import { ExtractJwt, Strategy, JwtFromRequestFunction } from "passport-jwt"
 import { PassportStrategy } from "@nestjs/passport"
 import { Injectable, UnauthorizedException } from "@nestjs/common"
 import type { Request } from "express"
@@ -8,7 +8,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request): string | null => {  // Add explicit return type here
+        ((request: Request): string | null => {
           // First try to get token from cookie
           const token = request?.cookies?.token
           if (token) {
@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           }
           console.log("Nessun token trovato")
           return null
-        },
+        }) as JwtFromRequestFunction
       ]),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || "your-secret-key",
