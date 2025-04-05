@@ -8,7 +8,7 @@ import { Role } from "@prisma/client"
 import { User } from "../auth/user.decorator"
 
 @Controller("entities")
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@UseGuards(JwtAuthGuard, RolesGuard)
 export class EntityController {
   constructor(private readonly entityService: EntityService) {}
 

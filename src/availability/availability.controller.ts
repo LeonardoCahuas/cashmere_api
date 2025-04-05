@@ -7,7 +7,7 @@ import type { CreateAvailabilityDto, GetAvailabilityQueryDto } from "./dto/avail
 import { User } from "src/auth/user.decorator"
 
 @Controller("availability")
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@UseGuards(JwtAuthGuard, RolesGuard)
 export class AvailabilityController {
   constructor(private availabilityService: AvailabilityService) {}
 

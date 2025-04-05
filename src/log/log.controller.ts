@@ -7,7 +7,7 @@ import { Role } from "@prisma/client"
 import type { CreateLogDto } from "./dto/log.dto"
 
 @Controller("logs")
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@UseGuards(JwtAuthGuard, RolesGuard)
 export class LogController {
   constructor(private logService: LogService) {}
 

@@ -17,7 +17,7 @@ import {
   import { Role } from '@prisma/client';
   
   @Controller('studios')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  //@UseGuards(JwtAuthGuard, RolesGuard)
   export class StudioController {
     constructor(private readonly studioService: StudioService) {}
   
