@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request): string => {  // Aggiungi tipo esplicito
+        (request: Request) => {  // Aggiungi tipo esplicito
           // First try to get token from cookie
           const token = request?.cookies?.token
           if (token) {
