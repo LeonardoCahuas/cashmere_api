@@ -5,7 +5,7 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guards"
 import { RolesGuard } from "../auth/roles.guards"
 import { Roles } from "../auth/roles.decorator"
 import { Role } from "@prisma/client"
-import { User } from "@/auth/user.decorator"
+import { User } from "../auth/user.decorator"
 
 @Controller("entities")
 @UseGuards(JwtAuthGuard, RolesGuard)
