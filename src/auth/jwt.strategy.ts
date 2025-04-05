@@ -2,45 +2,39 @@ import { ExtractJwt, Strategy } from "passport-jwt"
 import { PassportStrategy } from "@nestjs/passport"
 import { Injectable, UnauthorizedException } from "@nestjs/common"
 import type { Request } from "express"
-import { JwtFromRequestFunction } from "passport-jwt"
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      // La funzione di estrazione deve essere un 'JwtFromRequestFunction'
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
+        (request: Request): string | null => {  // Add explicit return type here
           // First try to get token from cookie
           const token = request?.cookies?.token
           if (token) {
             console.log("Token trovato nei cookie:", token.substring(0, 20) + "...")
             return token
           }
-
           // Fallback to Authorization header
           const authHeader = request?.headers?.authorization
           if (authHeader && authHeader.split(" ")[0] === "Bearer") {
             console.log("Token trovato nell'header Authorization:", authHeader.split(" ")[1].substring(0, 20) + "...")
             return authHeader.split(" ")[1]
           }
-
           console.log("Nessun token trovato")
           return null
         },
-      ]) as JwtFromRequestFunction,  // Cast esplicito al tipo corretto
+      ]),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || "your-secret-key",
     })
   }
-
+  
   async validate(payload: any) {
     console.log("JWT Payload:", payload)
-
     if (!payload) {
       throw new UnauthorizedException()
     }
-
     return {
       id: payload.sub,
       email: payload.email,
