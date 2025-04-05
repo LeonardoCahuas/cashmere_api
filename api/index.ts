@@ -2,7 +2,7 @@ import { NestFactory } from "@nestjs/core"
 import { AppModule } from "../src/app.module"
 import { ValidationPipe } from "@nestjs/common"
 import type { NestExpressApplication } from "@nestjs/platform-express"
-import * as cookieParser from "cookie-parser"
+import cookieParser from "cookie-parser"
 
 let app: NestExpressApplication
 
