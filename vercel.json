@@ -1,0 +1,25 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "api/index.ts",
+        "use": "@vercel/node",
+        "config": {
+          "includeFiles": ["src/**/*"],
+          "tsconfigPath": "tsconfig.build.json"
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "/api/index.ts",
+        "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+      }
+    ],
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+  
+  

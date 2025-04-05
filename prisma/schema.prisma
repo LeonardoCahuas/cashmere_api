@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  directUrl = env("NEXT_PUBLIC_DIRECT_URL")
+  url       = env("NEXT_PUBLIC_DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  username String  @unique
+  password String
+  role     Role    @default(USER)
+  phone    String?
+  entity   Entity? @relation(fields: [entityId], references: [id])
+  entityId String?
+
+  bookingsAsUser   Booking[]      @relation("UserBookings")
+  bookingsAsFonico Booking[]      @relation("FonicoBookings")
+  bookingsBooked   Booking[]      @relation("BookedByUser")
+  availabilities   Availability[]
+  holidays         Holiday[]
+  logs             Log[]
+  Report           Report[]
+}
+
+model Studio {
+  id       String    @id @default(cuid())
+  price    Float
+  value    Float
+  bookings Booking[]
+}
+
+model Booking {
+  id         String       @id @default(cuid())
+  start      DateTime
+  end        DateTime
+  notes      String?
+  state      BookingState @default(CONTATTARE)
+  created_at DateTime     @default(now())
+  phone      String       @default("")
+  instagram  String       @default("")
+
+  // Relations
+  user       User      @relation("UserBookings", fields: [userId], references: [id])
+  userId     String
+  fonico     User      @relation("FonicoBookings", fields: [fonicoId], references: [id])
+  fonicoId   String
+  studio     Studio    @relation(fields: [studioId], references: [id])
+  studioId   String
+  services   Service[]
+  booked_by  User      @relation("BookedByUser", fields: [bookedById], references: [id])
+  bookedById String
+  logs       Log[]
+}
+
+model Entity {
+  id    String @id @default(cuid())
+  name  String
+  users User[]
+}
+
+model Service {
+  id       String    @id @default(cuid())
+  name     String
+  price    Float
+  bookings Booking[]
+}
+
+model Availability {
+  id     String @id @default(cuid())
+  day    String // Day of week
+  start  String
+  end    String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+}
+
+model Holiday {
+  id     String       @id @default(cuid())
+  start  DateTime
+  end    DateTime
+  reason String
+  user   User         @relation(fields: [userId], references: [id])
+  userId String
+  state  HolidayState @default(CONFERMARE)
+  type   HolidayType  @default(PERMESSO)
+}
+
+model Report {
+  id     String @id @default(cuid())
+  reason String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+}
+
+model Log {
+  id         String    @id @default(cuid())
+  action     LogAction
+  time       DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  booking    Booking?  @relation(fields: [bookingId], references: [id])
+  bookingId  String?
+  oldBooking Json?
+  newBooking Json?
+}
+
+enum Role {
+  ADMIN
+  USER
+  ENGINEER
+  SECRETARY
+}
+
+enum BookingState {
+  CONTATTARE
+  CONTATTATO
+  CONFERMATO
+  ANNULLATO
+}
+
+enum LogAction {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+enum HolidayType {
+  FERIE
+  PERMESSO
+}
+
+enum HolidayState {
+  CONFERMARE
+  CONFERMATO
+  ANNULLATO
+}
