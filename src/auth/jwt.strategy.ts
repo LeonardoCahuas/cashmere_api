@@ -8,8 +8,9 @@ import { JwtFromRequestFunction } from "passport-jwt"
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
+      // La funzione di estrazione deve essere un 'JwtFromRequestFunction'
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request): string | null => {  // Esplicito tipo di ritorno
+        (request: Request) => {
           // First try to get token from cookie
           const token = request?.cookies?.token
           if (token) {
@@ -27,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           console.log("Nessun token trovato")
           return null
         },
-      ]) as unknown as JwtFromRequestFunction, // Cast esplicito in JwtFromRequestFunction
+      ]) as JwtFromRequestFunction,  // Cast esplicito al tipo corretto
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || "your-secret-key",
     })
