@@ -7,7 +7,6 @@
       "config": {
         "includeFiles": ["dist/**/*"],
         "excludeFiles": "{node_modules,test,src}/**/*.{spec,test}.ts",
-        "maxLambdaSize": "50mb",
         "tsconfigPath": "tsconfig.build.json"
       }
     }

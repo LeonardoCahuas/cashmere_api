@@ -11,22 +11,10 @@ async function bootstrap() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["https://cashmere-web.vercel.app"]
 
   app.enableCors({
-    origin: (origin, callback) => {
-      // Permetti richieste senza origin (come mobile app o curl)
-      if (!origin) {
-        callback(null, true)
-        return
-      }
-
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
-        callback(null, true)
-      } else {
-        callback(new Error("Not allowed by CORS"))
-      }
-    },
+    origin: "https://cashmere-web.vercel.app",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
-    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
   })
 
   // Cookie parser
