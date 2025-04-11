@@ -11,14 +11,14 @@ async function bootstrap() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["https://cashmere-web.vercel.app"]
 
   app.enableCors({
-    origin: "https://cashmere-web.vercel.app",
+    origin: "http://localhost:3000",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
-    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization","Cache-Control"],
   })
 
   // Cookie parser
-  app.use(cookieParser())
+  //app.use(cookieParser())
 
   // JSON payload size increase
   app.use(json({ limit: "50mb" }))
@@ -34,7 +34,7 @@ async function bootstrap() {
     }),
   )
 
-  const port = process.env.PORT || 3005
+  const port = 3005
   await app.listen(port)
   console.log(`✅ Application is running on: http://localhost:${port}`)
 }

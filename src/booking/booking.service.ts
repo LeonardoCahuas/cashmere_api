@@ -83,7 +83,7 @@ export class BookingService {
           connect: data.services?.map((id) => ({ id })) ?? [],
         },
         user: data.userId ? { connect: { id: data.userId } } : { connect: { id: "cm8z07nn20003mytvvatk4fvd" } },
-        fonico: data.fonicoId ? { connect: { id: data.fonicoId } } : { connect: { id: "cm8z06fn00002mytvfftqrkgx" } }, 
+        fonico: data.fonicoId ? { connect: { id: data.fonicoId } } : { connect: { id: "cm8z06fn00002mytvfftqrkgx" } },
         booked_by: userId ? { connect: { id: userId } } : { connect: { id: "cm8z07nn20003mytvvatk4fvd" } },
       },
       include: {
@@ -1080,16 +1080,13 @@ export class BookingService {
     operatingStartHour: number,
     operatingEndHour: number,
   ): Promise<{ start: string; end: string }[]> {
-    // Start looking from the requested end time
-    const searchStartTime = new Date(requestedEnd)
-
     // Get all future bookings for this studio
     const futureBookings = await this.prisma.booking.findMany({
       where: {
         studioId,
         state: BookingState.CONFERMATO,
-        end: {
-          gte: searchStartTime,
+        start: {
+          gte: startOfDay(requestedStart), // Start from the beginning of the requested day
         },
       },
       orderBy: {
@@ -1105,6 +1102,7 @@ export class BookingService {
     let slotsFound = 0
     let daysSearched = 0
     const maxDaysToSearch = 14 // Limit search to 14 days in the future
+    const maxEndTime = 22 // Studio closes at 22:00
 
     // Create a list of all booked periods
     const bookedPeriods = futureBookings.map((booking) => ({
@@ -1115,30 +1113,30 @@ export class BookingService {
     // Sort booked periods by start time
     bookedPeriods.sort((a, b) => a.start.getTime() - b.start.getTime())
 
-    // Start searching from the end of the requested booking
-    let currentDate = new Date(searchStartTime)
+    // Start searching from the requested start time (to find closest slots)
+    let currentDate = new Date(requestedStart)
+    let currentDay = currentDate.getDate()
 
     while (slotsFound < 2 && daysSearched < maxDaysToSearch) {
+      // If we've moved to a new day, reset to operating start hour
+      if (currentDate.getDate() !== currentDay) {
+        currentDay = currentDate.getDate()
+        currentDate.setHours(operatingStartHour, 0, 0, 0)
+        daysSearched++
+      }
+
       // Reset to operating start hour if we're before opening
       if (currentDate.getHours() < operatingStartHour) {
         currentDate.setHours(operatingStartHour, 0, 0, 0)
       }
 
-      // If we're after closing time, move to next day's opening
-      if (currentDate.getHours() >= operatingEndHour) {
-        currentDate.setDate(currentDate.getDate() + 1)
-        currentDate.setHours(operatingStartHour, 0, 0, 0)
-        daysSearched++
-        continue
-      }
-
       // Calculate potential end time for a slot starting at currentDate
       const potentialEndTime = new Date(currentDate.getTime() + durationMinutes * 60 * 1000)
 
-      // Check if this potential slot extends beyond operating hours
+      // Check if this potential slot extends beyond operating hours (22:00)
       if (
-        potentialEndTime.getHours() >= operatingEndHour ||
-        (potentialEndTime.getHours() === operatingEndHour && potentialEndTime.getMinutes() > 0)
+        potentialEndTime.getHours() > maxEndTime ||
+        (potentialEndTime.getHours() === maxEndTime && potentialEndTime.getMinutes() > 0)
       ) {
         // Move to next day's opening time
         currentDate.setDate(currentDate.getDate() + 1)
@@ -1180,16 +1178,13 @@ export class BookingService {
     operatingStartHour: number,
     operatingEndHour: number,
   ): Promise<{ start: string; end: string }[]> {
-    // Start looking from the requested end time
-    const searchStartTime = new Date(requestedEnd)
-
-    // Get all future bookings for this engineer
+    // Get all future bookings for this engineer starting from the beginning of the requested day
     const futureBookings = await this.prisma.booking.findMany({
       where: {
         fonicoId: engineerId,
         state: BookingState.CONFERMATO,
-        end: {
-          gte: searchStartTime,
+        start: {
+          gte: startOfDay(requestedStart),
         },
       },
       orderBy: {
@@ -1207,7 +1202,7 @@ export class BookingService {
         userId: engineerId,
         state: HolidayState.CONFERMATO,
         end: {
-          gte: searchStartTime,
+          gte: startOfDay(requestedStart),
         },
       },
       orderBy: {
@@ -1230,6 +1225,7 @@ export class BookingService {
     let slotsFound = 0
     let daysSearched = 0
     const maxDaysToSearch = 14 // Limit search to 14 days in the future
+    const maxEndTime = 22 // Studio closes at 22:00
 
     // Create a list of all unavailable periods (bookings and holidays)
     const unavailablePeriods = [
@@ -1257,10 +1253,18 @@ export class BookingService {
       6: "sat",
     }
 
-    // Start searching from the end of the requested booking
-    let currentDate = new Date(searchStartTime)
+    // Start searching from the requested start time (to find closest slots)
+    let currentDate = new Date(requestedStart)
+    let currentDay = currentDate.getDate()
 
     while (slotsFound < 2 && daysSearched < maxDaysToSearch) {
+      // If we've moved to a new day, reset to operating start hour
+      if (currentDate.getDate() !== currentDay) {
+        currentDay = currentDate.getDate()
+        currentDate.setHours(operatingStartHour, 0, 0, 0)
+        daysSearched++
+      }
+
       // Get the day of the week for the current date
       const dayOfWeek = currentDate.getDay()
       const dayName = dayMap[dayOfWeek].toLowerCase()
@@ -1308,17 +1312,17 @@ export class BookingService {
           availabilityStart = new Date(currentDate)
         }
 
-        // Check if we have enough time left in this slot for the booking duration
-        const timeLeftInSlot = availabilityEnd.getTime() - availabilityStart.getTime()
-        if (timeLeftInSlot < durationMinutes * 60 * 1000) {
-          continue
-        }
-
         // Try to find a free slot within this availability period
         const slotStart = new Date(availabilityStart)
 
         while (slotStart.getTime() + durationMinutes * 60 * 1000 <= availabilityEnd.getTime()) {
           const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60 * 1000)
+
+          // Check if slot ends after max end time (22:00)
+          if (slotEnd.getHours() > maxEndTime || (slotEnd.getHours() === maxEndTime && slotEnd.getMinutes() > 0)) {
+            // Move to next day
+            break
+          }
 
           // Check if this potential slot overlaps with any unavailable period
           const isUnavailable = unavailablePeriods.some((period) =>
@@ -1355,6 +1359,8 @@ export class BookingService {
 
     return alternativeSlots
   }
+  
+
 }
 
 
