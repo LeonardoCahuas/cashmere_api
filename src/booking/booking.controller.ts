@@ -161,9 +161,9 @@ export class BookingController {
   @Get("user/:userId")
   //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
   async getBookingsByUser(
-    @Param("fonicoId") fonicoId: string
+    @Param("userId") userId: string
   ) {
-    return this.bookingService.getBookingsByUser(fonicoId)
+    return this.bookingService.getBookingsByUser(userId)
   }
 
   @Get("studio/:studioId")
