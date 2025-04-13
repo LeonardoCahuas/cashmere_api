@@ -1321,7 +1321,7 @@ export class BookingService {
     let slotsFound = 0;
     let daysSearched = 0;
     const maxDaysToSearch = 14;
-    const maxEndTime = 20
+    const maxEndTime = 22
   
     // Studio apre alle 10:00 e chiude alle 22:00 ORA ITALIANA
     const utcOperatingStartHour = operatingStartHour - ITALIAN_TIMEZONE_OFFSET;
@@ -1349,12 +1349,12 @@ export class BookingService {
       }
   
       const potentialEndTime = new Date(currentDate.getTime() + durationMinutes * 60 * 1000);
-  
+      const potentialStartTime = new Date(currentDate.getTime());
       // Critical fix: Check if end time exceeds operating hours (22:00 Italian time)
       // We need to convert the UTC time to Italian time for this check
       const italianEndHour = (potentialEndTime.getUTCHours() + ITALIAN_TIMEZONE_OFFSET) % 24;
       const goesAfterHours = potentialEndTime.getUTCHours() > (maxEndTime - ITALIAN_TIMEZONE_OFFSET) ||
-      (potentialEndTime.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && potentialEndTime.getUTCMinutes() > 0)
+      (potentialEndTime.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && potentialEndTime.getUTCMinutes() > 0) //|| potentialStartTime.getUTCHours() >= maxEndTime + 2
       
       if (goesAfterHours) {
         // Move to next day
