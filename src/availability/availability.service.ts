@@ -12,14 +12,11 @@ export class AvailabilityService {
       where: { userId: engineerId },
     })
 
-    console.log(date)
 
     const weekDays = DateUtils.getWeekDays(date)
-    console.log(weekDays)
 
     return weekDays.flatMap((day) => {
       const dayAvailabilities = availabilities.filter((a) => a.day.toLowerCase() === day.dayName.toLowerCase())
-      console.log(dayAvailabilities)
       return dayAvailabilities.map((a) => ({
         id: a.id,
         day: a.day,

@@ -35,8 +35,11 @@ export class EntityController {
 
   @Put(":id")
   //@Roles(Role.ADMIN)
-  update(@Param('id') id: string, @Body() updateEntityDto: UpdateEntityDto) {
-    return this.entityService.update(id, updateEntityDto)
+  update(@Param('id') id: string, @Req() req: Request) {
+    //@ts-ignore
+    console.log(req.body)
+    //@ts-ignore
+    return this.entityService.update(id, req.body)
   }
 
   @Delete(':id')

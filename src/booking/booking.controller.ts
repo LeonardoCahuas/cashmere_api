@@ -148,16 +148,6 @@ export class BookingController {
     return this.bookingService.getBookingsByEntity(entityId, startDate, endDate)
   }
 
-  @Get("fonico/:fonicoId")
-  //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
-  async getBookingsByFonico(
-    @Param("fonicoId") fonicoId: string,
-    @Query("startDate", ParseDatePipe) startDate?: Date,
-    @Query("endDate", ParseDatePipe) endDate?: Date
-  ) {
-    return this.bookingService.getBookingsByFonico(fonicoId, startDate, endDate)
-  }
-
   @Get("user/:userId")
   //@Roles(Role.ADMIN, Role.SECRETARY, Role.ENGINEER)
   async getBookingsByUser(
@@ -180,5 +170,12 @@ export class BookingController {
   //@Roles(Role.ADMIN, Role.SECRETARY)
   async getBookingHistory(@Param("id") id: string) {
     return this.bookingService.getBookingHistory(id)
+  }
+  @Get("fonicoava/:fonicoId")
+  async getBookingsByFonico(
+    @Param("fonicoId") fonicoId: string
+  ) {
+    console.log("Endpoint chiamato")
+    return this.bookingService.getBookingsByFonico(fonicoId)
   }
 }

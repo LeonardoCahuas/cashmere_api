@@ -57,9 +57,6 @@ export class EntityService {
       where: { id },
       data: {
         name: data.name,
-        users: {
-          set: data.userIds?.map((id) => ({ id })),
-        },
       },
       include: {
         users: true,
@@ -140,33 +137,45 @@ export class EntityService {
       include: {
         services: true,
         studio: true,
-        fonico: true, // Include il fonico per ottenere il nome
+        fonico: true,
       },
     });
   
-    // Raggruppa le ore di prenotazione per fonicoId
+    // Raggruppa le ore di prenotazione per fonico, tenendo traccia degli studi
     const fonicoSessions = new Map();
-    let totHoursWithoutFonico = 0;
-  
+    
     bookings.forEach((booking) => {
       const bookingHours = (new Date(booking.end).getTime() - new Date(booking.start).getTime()) / 3600000;
+      const fonicoName = booking.fonico ? booking.fonico.username : "Senza Fonico";
+      const studioId = booking.studio ? booking.studio.id : "unknown";
       
-      if (booking.fonico) {
-        const fonicoName = booking.fonico.username;
-        if (!fonicoSessions.has(fonicoName)) {
-          fonicoSessions.set(fonicoName, { fonicoName, totHours: 0 });
-        }
-        fonicoSessions.get(fonicoName).totHours += bookingHours;
-      } else {
-        totHoursWithoutFonico += bookingHours;
+      if (!fonicoSessions.has(fonicoName)) {
+        fonicoSessions.set(fonicoName, { 
+          fonicoName, 
+          totHours: 0,
+          studiosMap: new Map(), // Mappa per tenere traccia degli studi per fonico
+          studios: [] // Array finale formattato
+        });
       }
+      
+      const fonicoData = fonicoSessions.get(fonicoName);
+      fonicoData.totHours += bookingHours;
+      
+      // Aggiorna le ore per studio
+      if (!fonicoData.studiosMap.has(studioId)) {
+        fonicoData.studiosMap.set(studioId, { id: studioId, hours: 0 });
+      }
+      fonicoData.studiosMap.get(studioId).hours += bookingHours;
     });
-  
-    // Converti l'oggetto in un array e aggiungi eventuali sessioni senza fonico
-    const result = Array.from(fonicoSessions.values());
-    if (totHoursWithoutFonico > 0) {
-      result.push({ fonicoName: "Senza Fonico", totHours: totHoursWithoutFonico });
-    }
+    
+    // Converti l'oggetto in un array con la struttura richiesta
+    const result = Array.from(fonicoSessions.values()).map(data => {
+      // Converte la mappa degli studi in un array
+      data.studios = Array.from(data.studiosMap.values());
+      // Rimuove la mappa temporanea
+      delete data.studiosMap;
+      return data;
+    });
   
     return result;
   }
