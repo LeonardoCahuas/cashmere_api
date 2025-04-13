@@ -1332,13 +1332,29 @@ export class BookingService {
     operatingStartHour: number,
     operatingEndHour: number,
   ): Promise<{ start: string; end: string }[]> {
+    // Assicurati che tutte le date siano considerate nel fuso orario italiano (UTC+2)
+    const timeZoneOffset = 2 * 60 * 60 * 1000; // UTC+2 in millisecondi
+    
+    // Funzione helper per creare date nel fuso orario italiano
+    const createLocalDate = (date: Date): Date => {
+      const utcDate = new Date(date);
+      return new Date(utcDate.getTime());
+    };
+    
+    // Funzione helper per ottenere l'inizio del giorno nel fuso orario italiano
+    const getLocalStartOfDay = (date: Date): Date => {
+      const localDate = createLocalDate(date);
+      localDate.setHours(0, 0, 0, 0);
+      return localDate;
+    };
+  
     // Get all future bookings for this studio
     const futureBookings = await this.prisma.booking.findMany({
       where: {
         studioId,
         state: BookingState.CONFERMATO,
         start: {
-          gte: startOfDay(requestedStart), // Start from the beginning of the requested day
+          gte: getLocalStartOfDay(requestedStart), // Start from the beginning of the requested day
         },
       },
       orderBy: {
@@ -1348,78 +1364,78 @@ export class BookingService {
         start: true,
         end: true,
       },
-    })
-
-    const alternativeSlots: { start: string; end: string }[] = []
-    let slotsFound = 0
-    let daysSearched = 0
-    const maxDaysToSearch = 14 // Limit search to 14 days in the future
-    const maxEndTime = 22 // Studio closes at 22:00
-
+    });
+  
+    const alternativeSlots: { start: string; end: string }[] = [];
+    let slotsFound = 0;
+    let daysSearched = 0;
+    const maxDaysToSearch = 14; // Limit search to 14 days in the future
+    const maxEndTime = 22; // Studio closes at 22:00
+  
     // Create a list of all booked periods
     const bookedPeriods = futureBookings.map((booking) => ({
-      start: new Date(booking.start),
-      end: new Date(booking.end),
-    }))
-
+      start: createLocalDate(booking.start),
+      end: createLocalDate(booking.end),
+    }));
+  
     // Sort booked periods by start time
-    bookedPeriods.sort((a, b) => a.start.getTime() - b.start.getTime())
-
+    bookedPeriods.sort((a, b) => a.start.getTime() - b.start.getTime());
+  
     // Start searching from the requested start time (to find closest slots)
-    let currentDate = new Date(requestedStart)
-    let currentDay = currentDate.getDate()
-
+    let currentDate = createLocalDate(requestedStart);
+    let currentDay = currentDate.getDate();
+  
     while (slotsFound < 2 && daysSearched < maxDaysToSearch) {
       // If we've moved to a new day, reset to operating start hour
       if (currentDate.getDate() !== currentDay) {
-        currentDay = currentDate.getDate()
-        currentDate.setHours(operatingStartHour, 0, 0, 0)
-        daysSearched++
+        currentDay = currentDate.getDate();
+        currentDate.setHours(operatingStartHour, 0, 0, 0);
+        daysSearched++;
       }
-
+  
       // Reset to operating start hour if we're before opening
       if (currentDate.getHours() < operatingStartHour) {
-        currentDate.setHours(operatingStartHour, 0, 0, 0)
+        currentDate.setHours(operatingStartHour, 0, 0, 0);
       }
-
+  
       // Calculate potential end time for a slot starting at currentDate
-      const potentialEndTime = new Date(currentDate.getTime() + durationMinutes * 60 * 1000)
-
+      const potentialEndTime = new Date(currentDate.getTime() + durationMinutes * 60 * 1000);
+  
       // Check if this potential slot extends beyond operating hours (22:00)
       if (
         potentialEndTime.getHours() > maxEndTime ||
         (potentialEndTime.getHours() === maxEndTime && potentialEndTime.getMinutes() > 0)
       ) {
         // Move to next day's opening time
-        currentDate.setDate(currentDate.getDate() + 1)
-        currentDate.setHours(operatingStartHour, 0, 0, 0)
-        daysSearched++
-        continue
+        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate.setHours(operatingStartHour, 0, 0, 0);
+        daysSearched++;
+        continue;
       }
-
+  
       // Check if this potential slot overlaps with any booking
       const overlappingBooking = bookedPeriods.find((period) =>
         isOverlapping(currentDate, potentialEndTime, period.start, period.end),
-      )
-
+      );
+  
       if (!overlappingBooking) {
         // Found an available slot!
         alternativeSlots.push({
           start: format(currentDate, "yyyy-MM-dd'T'HH:mm:ss"),
           end: format(potentialEndTime, "yyyy-MM-dd'T'HH:mm:ss"),
-        })
-
-        slotsFound++
-
+        });
+  
+        slotsFound++;
+  
         // Move past this slot to look for the next one
-        currentDate = new Date(potentialEndTime)
+        currentDate = new Date(potentialEndTime);
       } else {
         // Move to the end of the overlapping booking
-        currentDate = new Date(overlappingBooking.end)
+        currentDate = new Date(overlappingBooking.end);
       }
     }
-
-    return alternativeSlots
+  
+    return alternativeSlots;
   }
 
   private async findNextAvailableEngineerSlots(
