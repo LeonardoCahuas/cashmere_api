@@ -166,11 +166,6 @@ export class BookingController {
     return this.bookingService.getBookingsByStudio(studioId, startDate, endDate)
   }
 
-  @Get(":id/history")
-  //@Roles(Role.ADMIN, Role.SECRETARY)
-  async getBookingHistory(@Param("id") id: string) {
-    return this.bookingService.getBookingHistory(id)
-  }
   @Get("fonicoava/:fonicoId")
   async getBookingsByFonico(
     @Param("fonicoId") fonicoId: string
