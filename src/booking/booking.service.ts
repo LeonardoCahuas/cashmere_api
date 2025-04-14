@@ -1354,7 +1354,7 @@ export class BookingService {
       // We need to convert the UTC time to Italian time for this check
       const italianEndHour = (potentialEndTime.getUTCHours() + ITALIAN_TIMEZONE_OFFSET) % 24;
       const goesAfterHours = potentialEndTime.getUTCHours() > (maxEndTime - ITALIAN_TIMEZONE_OFFSET) ||
-      (potentialEndTime.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && potentialEndTime.getUTCMinutes() > 0) //|| potentialStartTime.getUTCHours() >= maxEndTime + 2
+      (potentialEndTime.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && potentialEndTime.getUTCMinutes() > 0) || potentialStartTime.getUTCHours() >= maxEndTime + 2 || potentialEndTime.getUTCHours() < 11
       
       if (goesAfterHours) {
         // Move to next day
