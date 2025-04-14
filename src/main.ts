@@ -18,7 +18,7 @@ async function bootstrap() {
   })
 
   // Cookie parser
-  app.use(cookieParser())
+  //app.use(cookieParser())
 
   // JSON payload size increase
   app.use(json({ limit: "50mb" }))
