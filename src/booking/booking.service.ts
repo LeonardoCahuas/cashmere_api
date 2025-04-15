@@ -481,7 +481,7 @@ export class BookingService {
     const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60))
   
     // Define operating hours (10:00 to 23:00 Italian time)
-    const operatingStartHour = 10 - ITALIAN_TIMEZONE_OFFSET
+    const operatingStartHour = 10
     const operatingEndHour = 23
   
     const result: EngineerAvailability[] = []
@@ -618,19 +618,37 @@ export class BookingService {
         // Parse start and end times from availability
         const [startHour, startMinute] = slot.start.split(":").map(Number)
         const [endHour, endMinute] = slot.end.split(":").map(Number)
-  
+        
         // Create date objects for this availability slot on the same day as the booking
         const availabilityStart = new Date(start)
         availabilityStart.setHours(startHour, startMinute, 0, 0)
-  
+        // Subtract 2 hours from availabilityStart
+        availabilityStart.setHours(availabilityStart.getHours() - 2)
+        
         const availabilityEnd = new Date(start)
         availabilityEnd.setHours(endHour, endMinute, 0, 0)
-  
-        // Handle times that cross midnight
-        if (availabilityEnd < availabilityStart) {
+        // Subtract 2 hours from availabilityEnd
+        availabilityEnd.setHours(availabilityEnd.getHours() - 2)
+        
+        // Handle times that cross midnight for both original and adjusted times
+        if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
+          // The original slot crosses midnight
           availabilityEnd.setDate(availabilityEnd.getDate() + 1)
         }
-  
+        
+        // Handle potential day change caused by the 2-hour subtraction
+        if (availabilityStart.getDate() !== start.getDate()) {
+          // If subtracting 2 hours pushed the start to the previous day
+          availabilityStart.setDate(start.getDate())
+        }
+        
+        if (availabilityEnd.getDate() !== start.getDate() && 
+            !(endHour < startHour || (endHour === startHour && endMinute < startMinute))) {
+          // If subtracting 2 hours pushed the end to the previous day
+          // and it's not due to the original slot crossing midnight
+          availabilityEnd.setDate(start.getDate())
+        }
+        
         // Check if the requested time is completely within this availability slot
         if (start >= availabilityStart && end <= availabilityEnd) {
           isAvailableDuringRequestedTime = true
