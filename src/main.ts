@@ -11,14 +11,14 @@ async function bootstrap() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["https://cashmere-web.vercel.app"]
 
   app.enableCors({
-    origin: "https://cashmere-web.vercel.app",
+    origin: "http://localhost:3000",//"https://cashmere-web.vercel.app",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
   })
 
   // Cookie parser
-  app.use(cookieParser())
+  //app.use(cookieParser())
 
   // JSON payload size increase
   app.use(json({ limit: "50mb" }))

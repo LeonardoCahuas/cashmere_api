@@ -476,19 +476,19 @@ export class BookingService {
         username: true,
       },
     })
-
+  
     // Calculate the duration of the requested booking in minutes
     const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60))
-
+  
     // Define operating hours (10:00 to 23:00 Italian time)
     const operatingStartHour = 10
     const operatingEndHour = 23
-
+  
     const result: EngineerAvailability[] = []
-
+  
     // Get the day of the week for the requested date
     const dayOfWeek = start.getDay() // 0 = Sunday, 1 = Monday, etc.
-
+  
     // Map day number to day name
     const dayMap: Record<number, string> = {
       0: "sun",
@@ -499,9 +499,9 @@ export class BookingService {
       5: "fri",
       6: "sat",
     }
-
+  
     const dayName = dayMap[dayOfWeek]
-
+    
     // Get all studios for checking availability
     const allStudios = await this.prisma.studio.findMany({
       select: {
@@ -509,7 +509,7 @@ export class BookingService {
         value: true,
       },
     })
-
+  
     // Check availability for each engineer
     for (const engineer of engineers) {
       // Check if the engineer has availability set for this day of the week
@@ -522,7 +522,7 @@ export class BookingService {
           },
         },
       })
-
+  
       // Check if the engineer has any holidays/time off that overlap with the requested time
       const engineerHolidays = await this.prisma.holiday.findMany({
         where: {
@@ -555,7 +555,7 @@ export class BookingService {
           ],
         },
       })
-
+  
       // Check if the engineer has any bookings that overlap with the requested time
       const engineerBookings = await this.prisma.booking.findMany({
         where: {
@@ -588,7 +588,7 @@ export class BookingService {
           ],
         },
       })
-
+  
       // If the engineer has no availability for this day, they're not available
       if (engineerAvailability.length === 0) {
         // Find alternative slots on other days with available studios
@@ -601,7 +601,7 @@ export class BookingService {
           operatingEndHour,
           allStudios,
         )
-
+  
         result.push({
           id: engineer.id,
           username: engineer.username,
@@ -610,39 +610,39 @@ export class BookingService {
         })
         continue
       }
-
+  
       // Check if the requested time falls within any of the engineer's availability slots
       let isAvailableDuringRequestedTime = false
-
+  
       for (const slot of engineerAvailability) {
         // Parse start and end times from availability
         const [startHour, startMinute] = slot.start.split(":").map(Number)
         const [endHour, endMinute] = slot.end.split(":").map(Number)
-
+  
         // Create date objects for this availability slot on the same day as the booking
         const availabilityStart = new Date(start)
         availabilityStart.setHours(startHour, startMinute, 0, 0)
-
+  
         const availabilityEnd = new Date(start)
         availabilityEnd.setHours(endHour, endMinute, 0, 0)
-
+  
         // Handle times that cross midnight
         if (availabilityEnd < availabilityStart) {
           availabilityEnd.setDate(availabilityEnd.getDate() + 1)
         }
-
+  
         // Check if the requested time is completely within this availability slot
         if (start >= availabilityStart && end <= availabilityEnd) {
           isAvailableDuringRequestedTime = true
           break
         }
       }
-
+  
       // If the engineer has holidays or bookings during the requested time, they're not available
       if (engineerHolidays.length > 0 || engineerBookings.length > 0) {
         isAvailableDuringRequestedTime = false
       }
-
+  
       if (isAvailableDuringRequestedTime) {
         result.push({
           id: engineer.id,
@@ -660,7 +660,7 @@ export class BookingService {
           operatingEndHour,
           allStudios,
         )
-
+  
         result.push({
           id: engineer.id,
           username: engineer.username,
@@ -669,7 +669,7 @@ export class BookingService {
         })
       }
     }
-
+  
     return result
   }
 
@@ -1388,8 +1388,6 @@ export class BookingService {
     return alternativeSlots;
   }
 
-  
-
   private async findNextAvailableEngineerSlotsWithStudios(
     engineerId: string,
     requestedStart: Date,
@@ -1399,22 +1397,41 @@ export class BookingService {
     operatingEndHour: number,
     studios: { id: string; value: any }[],
   ): Promise<{ start: string; end: string; availableStudios: string[] }[]> {
+    console.log("=== INIZIO findNextAvailableEngineerSlotsWithStudios ===");
+    console.log(`engineerId: ${engineerId}`);
+    console.log(`requestedStart: ${requestedStart}`);
+    console.log(`requestedEnd: ${requestedEnd}`);
+    console.log(`durationMinutes: ${durationMinutes}`);
+    console.log(`operatingStartHour: ${operatingStartHour}`);
+    console.log(`operatingEndHour: ${operatingEndHour}`);
+    console.log(`ITALIAN_TIMEZONE_OFFSET: ${ITALIAN_TIMEZONE_OFFSET}`);
+    
     // Convert input dates to consistent UTC format
     const utcRequestedStart = new Date(requestedStart);
-    const maxEndTime = 22;
-    // Studio opens at 10:00 and closes at 22:00 ITALIAN TIME
+    const utcRequestedEnd = new Date(requestedEnd);
+    console.log(`utcRequestedStart: ${utcRequestedStart}`);
+    console.log(`utcRequestedEnd: ${utcRequestedEnd}`);
+    
+    const maxEndTime = 22; // Studio closes at 22:00 Italian time
+    console.log(`maxEndTime (Italian): ${maxEndTime}:00`);
+    
     // Convert operating hours to UTC by subtracting timezone offset
     const utcOperatingStartHour = operatingStartHour - ITALIAN_TIMEZONE_OFFSET;
     const utcOperatingEndHour = operatingEndHour - ITALIAN_TIMEZONE_OFFSET;
     const utcMaxEndTime = maxEndTime - ITALIAN_TIMEZONE_OFFSET;
+    
+    console.log(`utcOperatingStartHour: ${utcOperatingStartHour}`);
+    console.log(`utcOperatingEndHour: ${utcOperatingEndHour}`);
+    console.log(`utcMaxEndTime: ${utcMaxEndTime}`);
   
+    console.log("Fetching bookings for engineer...");
     // Get all future bookings for this engineer starting from the beginning of the requested day
     const futureBookings = await this.prisma.booking.findMany({
       where: {
         fonicoId: engineerId,
         state: BookingState.CONFERMATO,
         start: {
-          gte: new Date(new Date(utcRequestedStart).setUTCHours(0, 0, 0, 0)), // UTC-aware startOfDay
+          gte: new Date(new Date(utcRequestedStart).setUTCHours(0, 0, 0, 0)),
         },
       },
       orderBy: {
@@ -1425,14 +1442,19 @@ export class BookingService {
         end: true,
       },
     });
+    console.log(`Found ${futureBookings.length} future bookings for engineer`);
+    futureBookings.forEach((booking, index) => {
+      console.log(`Booking ${index + 1}: ${booking.start} - ${booking.end}`);
+    });
   
+    console.log("Fetching holidays for engineer...");
     // Get all holidays for this engineer
     const holidays = await this.prisma.holiday.findMany({
       where: {
         userId: engineerId,
         state: HolidayState.CONFERMATO,
         end: {
-          gte: new Date(new Date(utcRequestedStart).setUTCHours(0, 0, 0, 0)), // UTC-aware startOfDay
+          gte: new Date(new Date(utcRequestedStart).setUTCHours(0, 0, 0, 0)),
         },
       },
       orderBy: {
@@ -1443,19 +1465,28 @@ export class BookingService {
         end: true,
       },
     });
+    console.log(`Found ${holidays.length} holidays for engineer`);
+    holidays.forEach((holiday, index) => {
+      console.log(`Holiday ${index + 1}: ${holiday.start} - ${holiday.end}`);
+    });
   
+    console.log("Fetching weekly availability for engineer...");
     // Get engineer's weekly availability
     const weeklyAvailability = await this.prisma.availability.findMany({
       where: {
         userId: engineerId,
       },
     });
+    console.log(`Found ${weeklyAvailability.length} availability entries for engineer`);
+    weeklyAvailability.forEach((avail, index) => {
+      console.log(`Availability ${index + 1}: Day=${avail.day}, ${avail.start} - ${avail.end}`);
+    });
   
     const alternativeSlots: { start: string; end: string; availableStudios: string[] }[] = [];
     let slotsFound = 0;
     let daysSearched = 0;
     const maxDaysToSearch = 14; // Limit search to 14 days in the future
-     // Studio closes at 22:00 Italian time
+    console.log(`maxDaysToSearch: ${maxDaysToSearch}`);
   
     // Create a list of all unavailable periods (bookings and holidays)
     const unavailablePeriods = [
@@ -1471,6 +1502,7 @@ export class BookingService {
   
     // Sort unavailable periods by start time
     unavailablePeriods.sort((a, b) => a.start.getTime() - b.start.getTime());
+    console.log(`Total unavailable periods: ${unavailablePeriods.length}`);
   
     // Map day numbers to day names
     const dayMap: Record<number, string> = {
@@ -1485,125 +1517,229 @@ export class BookingService {
   
     // Start searching from the requested start time (to find closest slots)
     let currentDate = new Date(utcRequestedStart);
-    let currentDay = currentDate.getUTCDate(); // Use UTC date methods
+    let currentDay = currentDate.getUTCDate();
+    console.log(`Initial currentDate: ${currentDate}`);
+    console.log(`Initial currentDay: ${currentDay}`);
   
     while (slotsFound < 2 && daysSearched < maxDaysToSearch) {
+      console.log(`\n=== SEARCH ITERATION (slotsFound: ${slotsFound}, daysSearched: ${daysSearched}) ===`);
+      console.log(`Current date: ${currentDate}`);
+      console.log(`Current UTC date: ${currentDate.getUTCDate()}`);
+      console.log(`Current UTC hours: ${currentDate.getUTCHours()}:${currentDate.getUTCMinutes()}`);
+      
       // If we've moved to a new day, reset to operating start hour
       if (currentDate.getUTCDate() !== currentDay) {
+        console.log("Moving to a new day...");
         currentDay = currentDate.getUTCDate();
         currentDate.setUTCHours(utcOperatingStartHour, 0, 0, 0);
         daysSearched++;
+        console.log(`New day: ${currentDate}, daysSearched: ${daysSearched}`);
       }
   
       // If current time is before operating hours, adjust to opening time
       if (currentDate.getUTCHours() < utcOperatingStartHour) {
+        console.log("Current time is before operating hours, adjusting...");
         currentDate.setUTCHours(utcOperatingStartHour, 0, 0, 0);
+        console.log(`Adjusted to opening time: ${currentDate}`);
       }
   
       // Get the day of the week for the current date (UTC-aware)
       const dayOfWeek = currentDate.getUTCDay();
       const dayName = dayMap[dayOfWeek].toLowerCase();
+      console.log(`Day of week: ${dayOfWeek} (${dayName})`);
   
       // Get engineer's availability for this day of the week
       const dayAvailability = weeklyAvailability.filter((a) => a.day.toLowerCase() === dayName);
+      console.log(`Availability entries for ${dayName}: ${dayAvailability.length}`);
+      
+      if (dayAvailability.length === 0) {
+        console.log(`No availability for ${dayName}, moving to next day`);
+      }
   
       // If engineer has no availability for this day, move to next day
       if (dayAvailability.length === 0) {
         currentDate.setUTCDate(currentDate.getUTCDate() + 1);
         currentDate.setUTCHours(utcOperatingStartHour, 0, 0, 0);
         daysSearched++;
+        console.log(`Moved to next day: ${currentDate}, daysSearched: ${daysSearched}`);
         continue;
       }
   
       // Check each availability slot for this day
       let foundSlotForToday = false;
   
-      for (const slot of dayAvailability) {
-        if (foundSlotForToday) break;
+      for (let availIdx = 0; availIdx < dayAvailability.length; availIdx++) {
+        const slot = dayAvailability[availIdx];
+        console.log(`\n--- Checking availability slot ${availIdx + 1}: ${slot.start} - ${slot.end} ---`);
+        
+        if (foundSlotForToday) {
+          console.log("Already found slot for today, skipping remaining availability checks");
+          break;
+        }
   
         // Parse start and end times from availability (these are in Italian time)
-        // Convert to UTC by subtracting the timezone offset
         const [startHour, startMinute] = slot.start.split(":").map(Number);
         const [endHour, endMinute] = slot.end.split(":").map(Number);
+        console.log(`Italian time availability: ${startHour}:${startMinute} - ${endHour}:${endMinute}`);
+        
+        // Convert to UTC by subtracting the timezone offset
+        let slotStartHour = startHour - ITALIAN_TIMEZONE_OFFSET;
+        let slotEndHour = endHour - ITALIAN_TIMEZONE_OFFSET;
+        
+        // Handle day wrap for UTC conversion
+        if (slotStartHour < 0) slotStartHour += 24;
+        if (slotEndHour < 0) slotEndHour += 24;
+        
+        console.log(`UTC time availability: ${slotStartHour}:${startMinute} - ${slotEndHour}:${endMinute}`);
         
         // Create date objects for this availability slot (UTC-aware)
         let availabilityStart = new Date(currentDate);
-        availabilityStart.setUTCHours(startHour - ITALIAN_TIMEZONE_OFFSET, startMinute, 0, 0);
+        availabilityStart.setUTCHours(slotStartHour, startMinute, 0, 0);
   
         const availabilityEnd = new Date(currentDate);
-        availabilityEnd.setUTCHours(endHour - ITALIAN_TIMEZONE_OFFSET, endMinute, 0, 0);
+        availabilityEnd.setUTCHours(slotEndHour, endMinute, 0, 0);
+  
+        console.log(`Availability start: ${availabilityStart}`);
+        console.log(`Availability end: ${availabilityEnd}`);
   
         // Handle times that cross midnight
         if (availabilityEnd < availabilityStart) {
+          console.log("Availability crosses midnight, adjusting end date...");
           availabilityEnd.setUTCDate(availabilityEnd.getUTCDate() + 1);
+          console.log(`Adjusted availability end: ${availabilityEnd}`);
         }
   
         // If current time is after the end of this availability slot, skip to next slot
         if (currentDate > availabilityEnd) {
+          console.log("Current time is after availability end, skipping slot");
           continue;
         }
   
         // If current time is within this availability slot, adjust start time
         if (currentDate > availabilityStart) {
+          console.log("Current time is within availability slot, adjusting start time");
           availabilityStart = new Date(currentDate);
+          console.log(`Adjusted availability start: ${availabilityStart}`);
         }
   
         // Try to find a free slot within this availability period
         const slotStart = new Date(availabilityStart);
+        console.log(`Looking for free slots starting at: ${slotStart}`);
   
+        let attemptCount = 0;
         while (slotStart.getTime() + durationMinutes * 60 * 1000 <= availabilityEnd.getTime()) {
+          attemptCount++;
+          console.log(`\nAttempt ${attemptCount} at time: ${slotStart}`);
+          
+          // Add this check - If start time is already at or past max end time in Italian time
+          const slotStartItalianHour = (slotStart.getUTCHours() + ITALIAN_TIMEZONE_OFFSET) % 24;
+          const slotStartItalianMinute = slotStart.getUTCMinutes();
+          
+          console.log(`Slot start Italian time: ${slotStartItalianHour}:${slotStartItalianMinute}`);
+          
+          // Check if slot starts at or after max end time (22:00 Italian time)
+          const startsAfterHours = slotStartItalianHour >= maxEndTime;
+          
+          console.log(`Starts after hours? ${startsAfterHours}`);
+          
+          if (startsAfterHours) {
+            console.log("Start time is already at or past closing time, breaking loop");
+            break; // Skip this slot as it starts after closing time
+          }
+          
           const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60 * 1000);
-  
-          // Check if slot ends after max end time (22:00) in UTC
-          const italianEndHour = (slotEnd.getUTCHours() + ITALIAN_TIMEZONE_OFFSET) % 24;
-          const goesAfterHours = slotEnd.getUTCHours() > (maxEndTime - ITALIAN_TIMEZONE_OFFSET) ||
-            (slotEnd.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && slotEnd.getUTCMinutes() > 0);
-  
+          console.log(`Potential slot end: ${slotEnd}`);
+        
+          // Check if slot end time would exceed the max end time (22:00 Italian time)
+          const slotEndItalianHour = (slotEnd.getUTCHours() + ITALIAN_TIMEZONE_OFFSET) % 24;
+          const slotEndItalianMinute = slotEnd.getUTCMinutes();
+          
+          console.log(`Slot end Italian time: ${slotEndItalianHour}:${slotEndItalianMinute}`);
+          console.log(`Max Italian end time: ${maxEndTime}:00`);
+          
+          // Check if slot ends after max end time (22:00 Italian time)
+          const goesAfterHours = slotEndItalianHour > maxEndTime || 
+              (slotEndItalianHour === maxEndTime && slotEndItalianMinute > 0);
+          
+          console.log(`Goes after hours? ${goesAfterHours}`);
+          
           if (goesAfterHours) {
-            // Move to the next day
-            break;
+            console.log("Slot would end after closing time, breaking loop");
+            break; // Move to next day or slot
           }
   
           // Check if this potential slot overlaps with any unavailable period
-          const isUnavailable = unavailablePeriods.some((period) =>
-            isOverlapping(slotStart, slotEnd, period.start, period.end),
-          );
+          let isUnavailable = false;
+          for (let i = 0; i < unavailablePeriods.length; i++) {
+            const period = unavailablePeriods[i];
+            const overlaps = isOverlapping(slotStart, slotEnd, period.start, period.end);
+            if (overlaps) {
+              console.log(`Overlaps with unavailable period ${i+1}: ${period.start} - ${period.end}`);
+              isUnavailable = true;
+              break;
+            }
+          }
+          
+          console.log(`Is unavailable due to bookings/holidays? ${isUnavailable}`);
   
           if (!isUnavailable) {
+            console.log("Slot is available, checking for available studios...");
             // Check which studios are available during this slot
             const availableStudios = await this.findAvailableStudiosForSlot(slotStart, slotEnd, studios);
-  
-            // Only consider this slot if there are available studios
+            console.log(`Available studios: ${availableStudios.length}`);
+            
             if (availableStudios.length > 0) {
+              console.log("Studios are available! Adding slot to results");
+              
               // Found an available slot with available studios!
-              // Convert times back to Italian timezone for output
+              // Convert times to proper format for output
+              const formattedStart = format(slotStart, "yyyy-MM-dd'T'HH:mm:ss");
+              const formattedEnd = format(slotEnd, "yyyy-MM-dd'T'HH:mm:ss");
+              
+              console.log(`Formatted slot: ${formattedStart} - ${formattedEnd}`);
+              
               alternativeSlots.push({
-                start: new Date(slotStart.getTime() + ITALIAN_TIMEZONE_OFFSET * 60 * 60 * 1000).toISOString().replace('Z', ''),
-                end: new Date(slotEnd.getTime() + ITALIAN_TIMEZONE_OFFSET * 60 * 60 * 1000).toISOString().replace('Z', ''),
+                start: formattedStart,
+                end: formattedEnd,
                 availableStudios: availableStudios,
               });
   
               slotsFound++;
               foundSlotForToday = true;
+              console.log(`Slots found: ${slotsFound}`);
   
               // Move past this slot to look for the next one
               currentDate = new Date(slotEnd);
+              console.log(`Updated currentDate to: ${currentDate}`);
               break;
+            } else {
+              console.log("No studios available for this time slot");
             }
           }
   
           // Try the next possible start time (increment by 30 minutes)
           slotStart.setUTCMinutes(slotStart.getUTCMinutes() + 30);
+          console.log(`Moving to next slot time: ${slotStart}`);
         }
+        
+        console.log(`End of availability slot processing. Found slot for today? ${foundSlotForToday}`);
       }
   
       // If we didn't find a slot today, move to the next day
       if (!foundSlotForToday) {
+        console.log("Did not find any slots today, moving to next day");
         currentDate.setUTCDate(currentDate.getUTCDate() + 1);
         currentDate.setUTCHours(utcOperatingStartHour, 0, 0, 0);
         daysSearched++;
+        console.log(`New date: ${currentDate}, daysSearched: ${daysSearched}`);
       }
     }
+  
+    console.log(`=== SEARCH COMPLETED ===`);
+    console.log(`Total slots found: ${alternativeSlots.length}`);
+    alternativeSlots.forEach((slot, i) => {
+      console.log(`Slot ${i+1}: ${slot.start} - ${slot.end} (Studios: ${slot.availableStudios.length})`);
+    });
   
     return alternativeSlots;
   }
