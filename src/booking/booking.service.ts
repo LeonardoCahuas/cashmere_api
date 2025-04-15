@@ -481,7 +481,7 @@ export class BookingService {
     const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60))
   
     // Define operating hours (10:00 to 23:00 Italian time)
-    const operatingStartHour = 10
+    const operatingStartHour = 10 - ITALIAN_TIMEZONE_OFFSET
     const operatingEndHour = 23
   
     const result: EngineerAvailability[] = []
