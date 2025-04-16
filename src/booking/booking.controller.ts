@@ -173,4 +173,15 @@ export class BookingController {
     console.log("Endpoint chiamato")
     return this.bookingService.getBookingsByFonico(fonicoId)
   }
+
+  @Get("future/:fonicoId")
+  async getEngineerFutureBookins(
+    @Param("fonicoId") fonicoId: string
+  ) {
+    console.log("Endpoint chiamato")
+    return this.bookingService.findFonicoFutureBookingsWithAvailabilityCheck(fonicoId)
+  }
+
+
 }
+/* findFonicoFutureBookingsWithAvailabilityCheck */

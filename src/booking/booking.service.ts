@@ -126,6 +126,104 @@ export class BookingService {
     })
   }
 
+  async findFonicoFutureBookingsWithAvailabilityCheck(fonicoId: string): Promise<(Booking & { isWithinAvailability: boolean })[]> {
+    const now = new Date();
+    
+    // Ottieni tutte le prenotazioni future del fonico
+    const futureBookings = await this.prisma.booking.findMany({
+      where: {
+        fonicoId,
+        start: {
+          gte: now,
+        },
+        state: BookingState.CONFERMATO,
+      },
+      orderBy: {
+        start: 'asc',
+      },
+      include: {
+        services: true,
+        studio: true,
+        user: true,
+      },
+    });
+  
+    // Ottieni tutte le disponibilità settimanali del fonico
+    const weeklyAvailability = await this.prisma.availability.findMany({
+      where: {
+        userId: fonicoId,
+      },
+    });
+  
+    // Map day numbers to day names
+    const dayMap: Record<number, string> = {
+      0: "sun",
+      1: "mon",
+      2: "tue",
+      3: "wed",
+      4: "thu",
+      5: "fri",
+      6: "sat",
+    };
+  
+    // Controlla se ogni prenotazione è all'interno della disponibilità del fonico
+    const bookingsWithAvailabilityCheck = futureBookings.map(booking => {
+      const bookingStart = new Date(booking.start);
+      const bookingEnd = new Date(booking.end);
+      
+      // Determina il giorno della settimana della prenotazione in UTC
+      const dayOfWeek = bookingStart.getUTCDay();
+      const dayName = dayMap[dayOfWeek].toLowerCase();
+      
+      // Filtra le disponibilità per questo giorno della settimana
+      const dayAvailability = weeklyAvailability.filter(a => a.day.toLowerCase() === dayName);
+      
+      // Se non ci sono disponibilità per questo giorno, la prenotazione è fuori dagli orari
+      if (dayAvailability.length === 0) {
+        return { ...booking, isWithinAvailability: false };
+      }
+      
+      // Controlla se la prenotazione è all'interno di uno degli slot di disponibilità
+      let isWithinAvailability = false;
+      
+      for (const slot of dayAvailability) {
+        // Parsing degli orari di inizio e fine della disponibilità (in orario italiano)
+        const [startHour, startMinute] = slot.start.split(':').map(Number);
+        const [endHour, endMinute] = slot.end.split(':').map(Number);
+        
+        // Converti in UTC sottraendo l'offset del fuso orario italiano
+        let slotStartHour = startHour - ITALIAN_TIMEZONE_OFFSET;
+        let slotEndHour = endHour - ITALIAN_TIMEZONE_OFFSET;
+        
+        // Gestisci il cambio di giorno nella conversione UTC
+        if (slotStartHour < 0) slotStartHour += 24;
+        if (slotEndHour < 0) slotEndHour += 24;
+        
+        // Crea gli oggetti Date per lo slot di disponibilità
+        const slotStartDate = new Date(bookingStart);
+        slotStartDate.setUTCHours(slotStartHour, startMinute, 0, 0);
+        
+        const slotEndDate = new Date(bookingStart);
+        slotEndDate.setUTCHours(slotEndHour, endMinute, 0, 0);
+        
+        // Gestisci gli orari che attraversano la mezzanotte
+        if (slotEndDate < slotStartDate) {
+          slotEndDate.setUTCDate(slotEndDate.getUTCDate() + 1);
+        }
+        
+        // Controlla se la prenotazione è completamente all'interno dello slot di disponibilità
+        if (bookingStart >= slotStartDate && bookingEnd <= slotEndDate) {
+          isWithinAvailability = true;
+          break;
+        }
+      }
+      
+      return { ...booking, isWithinAvailability };
+    });
+    
+    return bookingsWithAvailabilityCheck;
+  }
+
   async findEngineerBookings(id: string): Promise<(BookingWithRelations & { isWithinAvailability: boolean })[]> {
     const now = new Date()
 
@@ -623,12 +721,12 @@ export class BookingService {
         const availabilityStart = new Date(start)
         availabilityStart.setHours(startHour, startMinute, 0, 0)
         // Subtract 2 hours from availabilityStart
-        availabilityStart.setHours(availabilityStart.getHours() - 2)
+        availabilityStart.setHours(availabilityStart.getHours() - ITALIAN_TIMEZONE_OFFSET)
         
         const availabilityEnd = new Date(start)
         availabilityEnd.setHours(endHour, endMinute, 0, 0)
         // Subtract 2 hours from availabilityEnd
-        availabilityEnd.setHours(availabilityEnd.getHours() - 2)
+        availabilityEnd.setHours(availabilityEnd.getHours() - ITALIAN_TIMEZONE_OFFSET)
         
         // Handle times that cross midnight for both original and adjusted times
         if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
@@ -1372,7 +1470,7 @@ export class BookingService {
       // We need to convert the UTC time to Italian time for this check
       const italianEndHour = (potentialEndTime.getUTCHours() + ITALIAN_TIMEZONE_OFFSET) % 24;
       const goesAfterHours = potentialEndTime.getUTCHours() > (maxEndTime - ITALIAN_TIMEZONE_OFFSET) ||
-      (potentialEndTime.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && potentialEndTime.getUTCMinutes() > 0) || potentialStartTime.getUTCHours() >= maxEndTime + 2 || potentialEndTime.getUTCHours() < 11
+      (potentialEndTime.getUTCHours() === (maxEndTime - ITALIAN_TIMEZONE_OFFSET) && potentialEndTime.getUTCMinutes() > 0) || potentialStartTime.getUTCHours() >= maxEndTime + ITALIAN_TIMEZONE_OFFSET || potentialEndTime.getUTCHours() < 11
       
       if (goesAfterHours) {
         // Move to next day

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from "@nestjs/common"
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req } from "@nestjs/common"
 import { UserService } from "./user.service"
 import { JwtAuthGuard } from "../auth/jwt-auth.guards"
 import { RolesGuard } from "../auth/roles.guards"
@@ -28,6 +28,14 @@ export class UserController {
   findAllUsers() {
     return this.userService.findAllUsers()
   }
+  @Put("/notes/:id")
+  async updateBooking(
+    @Param("id") id: string,
+    @Req() req: Request,
+  ) {
+    //@ts-ignore
+    return this.userService.updateNotes(id, req.body.notes);
+  }
 
   @Get(":id")
   //@Roles(Role.ADMIN)
@@ -51,6 +59,12 @@ export class UserController {
   //@Roles(Role.ADMIN)
   updateEntity(@Param("id") id: string, @Param("entity") entity: string) {
     return this.userService.updateEntity(id, entity)
+  }
+
+  @Put("/user/:id/:newUsername")
+  //@Roles(Role.ADMIN)
+  updateUser(@Param("id") id: string, @Param("newUsername") newUsername: string) {
+    return this.userService.updateUsername(id, newUsername)
   }
 
   @Delete(":id")

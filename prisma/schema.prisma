@@ -11,11 +11,13 @@ datasource db {
 model User {
   id       String  @id @default(cuid())
   username String  @unique
+  auth_id  String  @unique
   password String
   role     Role    @default(USER)
   phone    String?
   entity   Entity? @relation(fields: [entityId], references: [id])
   entityId String?
+  notes    String?  @default("")
 
   bookingsAsUser   Booking[]      @relation("UserBookings")
   bookingsAsFonico Booking[]      @relation("FonicoBookings")

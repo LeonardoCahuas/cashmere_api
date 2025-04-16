@@ -42,6 +42,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         username: dto.username,
+        auth_id: dto.username,
         password: hashedPassword,
         phone: dto.phone,
         role: "USER",
@@ -111,13 +112,14 @@ export class AuthService {
       }
 
       let user = await this.prisma.user.findUnique({
-        where: { username: supabaseUser.email },
+        where: { auth_id: supabaseUser.email },
       })
       console.log("Google login user:", user)
 
       if (!user) {
         user = await this.prisma.user.create({
           data: {
+            auth_id: supabaseUser.email,
             username: supabaseUser.email,
             password: await bcrypt.hash(Math.random().toString(36), 10),
             role: "USER",

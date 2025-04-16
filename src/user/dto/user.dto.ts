@@ -19,6 +19,10 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   entityId?: string
+
+  @IsString()
+  @IsOptional()
+  notes?: string
 }
 
 export class UpdateUserDto {

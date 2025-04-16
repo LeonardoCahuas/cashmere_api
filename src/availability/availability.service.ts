@@ -27,6 +27,12 @@ export class AvailabilityService {
     })
   }
 
+  async getUserAvailability(engineerId: string ){
+    return this.prisma.availability.findMany({
+      where: { userId: engineerId },
+    })
+  }
+
   async getWeeklyAvailability(engineerId: string) {
     return this.prisma.availability.findMany({
       where: { userId: engineerId },

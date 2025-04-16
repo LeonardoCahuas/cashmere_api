@@ -25,6 +25,12 @@ export class AvailabilityController {
     );
   }
 
+  @Get('user/:userId')
+  //@Roles('USER', 'SECRETARY', 'ADMIN', 'ENGINEER')
+  async getUserAvailabilities(@Param('userId') userId: string,) {
+    return this.availabilityService.getUserAvailability(userId);
+  }
+
   @Get('weekly')
   //@Roles('USER', 'SECRETARY', 'ADMIN', 'ENGINEER')
   async getWeeklyAvailability(@Query('engineerId') engineerId: string) {
@@ -50,6 +56,7 @@ export class AvailabilityController {
   async deleteAvailability(@Param('id') id: string) {
     return this.availabilityService.deleteAvailability(id);
   }
+  
 }
 
 

@@ -23,6 +23,7 @@ export class UserService {
     return this.prisma.user.create({
       data: {
         ...data,
+        auth_id: data.username,
         password: hashedPassword,
       },
     })
@@ -92,6 +93,33 @@ export class UserService {
       where: { id },
       data: { entity: { connect: { id: entity } }, },
       include: { entity: true },
+    });
+  }
+
+  async updateUsername(id: string, newUsername: string) {
+    const user = await this.findOne(id);
+  
+    if (!user) {
+      throw new Error("User not found");
+    }
+  
+    return this.prisma.user.update({
+      where: { id },
+      data: { username: newUsername }
+    });
+  }
+
+  async updateNotes(id: string, notes: string) {
+    const user = await this.findOne(id);
+  
+    if (!user) {
+      throw new Error("User not found");
+    }
+  
+    return this.prisma.user.update({
+      where: { id },
+      //@ts-ignore
+      data: { notes: notes }
     });
   }
 
