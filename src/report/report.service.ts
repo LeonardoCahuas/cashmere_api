@@ -6,15 +6,17 @@ import type { CreateReportDto } from "./dto/report.dto"
 export class ReportService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, data: CreateReportDto) {
+  async create( data: CreateReportDto,userId: string) {
 
     console.log(data)
     return this.prisma.report.create({
       data: {
         reason:data.reason,
-        user: { connect: { id: userId } },
+        user: userId ? { connect: { id: userId } } : {},
+        phone: data.phone || ""
       },
-    })
+    }
+  )
   }
 
   async findAll() {

@@ -1120,7 +1120,22 @@ export class BookingService {
       },
     })
 
-    const fonicoBookings = await this.prisma.booking.findMany({
+    /* const fonicoBookings = await this.prisma.booking.findMany({
+      where: {
+        fonicoId,
+        state: BookingState.CONFERMATO,
+        start: {
+          gte: now,
+          lt: nextWeek,
+        },
+      },
+      select: {
+        start: true,
+        end: true,
+      },
+    }) */
+
+    const fonicoBookings = fonicoId === 'cm8z06fn00002mytvfftqrkgx' ? [] : await this.prisma.booking.findMany({
       where: {
         fonicoId,
         state: BookingState.CONFERMATO,

@@ -17,7 +17,7 @@ export class ReportController {
   ) {
     console.log(req.body)
     // @ts-ignore
-    return this.reportService.create(req.body.userId, req.body)
+    return this.reportService.create(req.body, req.body.userId ? req.body.userId : null)
   }
 
   @Get()

@@ -7,4 +7,8 @@ export class CreateReportDto {
 
   @IsString()
   reason: string
+
+  @IsOptional()
+  @IsString()
+  phone: string
 }
