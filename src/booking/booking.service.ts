@@ -1794,7 +1794,7 @@ export class BookingService {
           
           // Check if slot ends after max end time (22:00 Italian time)
           const goesAfterHours = slotEndItalianHour > maxEndTime || 
-              (slotEndItalianHour === maxEndTime && slotEndItalianMinute > 0) || slotEndItalianHour < operatingStartHour;
+              (slotEndItalianHour === maxEndTime && slotEndItalianMinute > 0) || slotEndItalianHour < operatingStartHour || slotStartItalianHour < operatingStartHour ;
           
           console.log(`Goes after hours? ${goesAfterHours}`);
           
