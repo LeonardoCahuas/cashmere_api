@@ -1492,16 +1492,20 @@ export class BookingService {
 
               // Found an available slot with available studios!
               // Convert times to proper format for output
-              const formattedStart = format(slotStart, "yyyy-MM-dd'T'HH:mm:ss")
-              const formattedEnd = format(slotEnd, "yyyy-MM-dd'T'HH:mm:ss")
+              const adjustedSlotStart = new Date(slotStart.getTime() + ITALIAN_TIMEZONE_OFFSET * 60 * 60 * 1000);
+              const adjustedSlotEnd = new Date(slotEnd.getTime() + ITALIAN_TIMEZONE_OFFSET * 60 * 60 * 1000);
 
-              console.log(`Formatted slot: ${formattedStart} - ${formattedEnd}`)
+              const formattedStart = format(adjustedSlotStart, "yyyy-MM-dd'T'HH:mm:ss");
+              const formattedEnd = format(adjustedSlotEnd, "yyyy-MM-dd'T'HH:mm:ss");
+
+              console.log(`Formatted slot: ${formattedStart} - ${formattedEnd}`);
 
               alternativeSlots.push({
                 start: formattedStart,
                 end: formattedEnd,
                 availableStudios: availableStudios,
-              })
+              });
+
 
               slotsFound++
               foundSlotForToday = true
