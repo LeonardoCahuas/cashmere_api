@@ -9,15 +9,18 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(cuid())
-  username String  @unique
-  auth_id  String  @unique
-  password String
-  role     Role    @default(USER)
-  phone    String?
-  entity   Entity? @relation(fields: [entityId], references: [id])
-  entityId String?
-  notes    String?  @default("")
+  id        String  @id @default(cuid())
+  username  String  @unique
+  auth_id   String  @unique
+  password  String
+  role      Role    @default(USER)
+  phone     String?
+  entity    Entity? @relation(fields: [entityId], references: [id])
+  entityId  String?
+  manager   User?   @relation("ManagerToUser", fields: [managerId], references: [id])
+  managerId String?
+  employees User[]  @relation("ManagerToUser")
+  notes     String? @default("")
 
   bookingsAsUser   Booking[]      @relation("UserBookings")
   bookingsAsFonico Booking[]      @relation("FonicoBookings")
@@ -116,6 +119,7 @@ enum Role {
   USER
   ENGINEER
   SECRETARY
+  MANAGER
 }
 
 enum BookingState {

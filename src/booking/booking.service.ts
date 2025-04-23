@@ -478,7 +478,10 @@ export class BookingService {
   async getBookingsByUser(userId: string) {
     return this.prisma.booking.findMany({
       where: {
-        userId: userId,
+        OR: [
+          { userId: userId },
+          { user: { managerId: userId } }
+        ],
       },
       include: {
         services: true,

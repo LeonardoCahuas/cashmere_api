@@ -4,7 +4,7 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guards"
 import { RolesGuard } from "../auth/roles.guards"
 import { Roles } from "../auth/roles.decorator"
 import { Role } from "@prisma/client"
-import type { CreateUserDto, UpdateUserDto } from "./dto/user.dto"
+import type { CreateUserDto, RegisterDto, UpdateUserDto } from "./dto/user.dto"
 
 @Controller("users")
 ////@UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,8 +13,9 @@ export class UserController {
 
   @Post()
   //@Roles(Role.ADMIN)
-  create(@Body() dto: CreateUserDto) {
-    return this.userService.create(dto)
+  create(@Req() req: Request,) {
+    //@ts-ignore
+    return this.userService.create(req.body)
   }
 
   @Get()
@@ -59,6 +60,12 @@ export class UserController {
   //@Roles(Role.ADMIN)
   updateEntity(@Param("id") id: string, @Param("entity") entity: string) {
     return this.userService.updateEntity(id, entity)
+  }
+
+  @Get("/managers-users/:id")
+  //@Roles(Role.ADMIN)
+  findManagersUser(@Param("id") id: string) {
+    return this.userService.findManagers(id)
   }
 
   @Put("/user/:id/:newUsername")

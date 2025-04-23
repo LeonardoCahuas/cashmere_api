@@ -10,27 +10,61 @@ export class UserService {
   constructor(private prisma: PrismaService) { }
 
   async create(data: CreateUserDto) {
+    console.log("DATAAAA")
+    console.log(data)
     const existingUser = await this.prisma.user.findUnique({
       where: { username: data.username },
     })
-
+    
     if (existingUser) {
       throw new ConflictException("Username already exists")
     }
-
+    
     const hashedPassword = await bcrypt.hash(data.password, 10)
-
+    
+    // Prepara l'oggetto dati mantenendo lo spread originale
+    const userData = {
+      ...data,
+      auth_id: data.username,
+      password: hashedPassword,
+    }
+    console.log("DATAAAA1")
+    console.log(data)
+    // Se è fornito managerId, aggiungi la connessione al manager
+    if (data.managerId) {
+      // Verifica se il manager esiste
+      const managerExists = await this.prisma.user.findUnique({
+        where: { id: data.managerId },
+      })
+      
+      if (!managerExists) {
+        throw new NotFoundException(`Manager with ID ${data.managerId} not found`)
+      }
+      
+      // Sostituisci il managerId con la connessione appropriata
+      delete userData.managerId;
+      //@ts-ignore
+      userData.manager = {
+        connect: { id: data.managerId }
+      }
+    }
+    
     return this.prisma.user.create({
-      data: {
-        ...data,
-        auth_id: data.username,
-        password: hashedPassword,
-      },
+      data: userData,
     })
   }
 
   async findAll() {
     return this.prisma.user.findMany({
+      include: {
+        entity: true,
+      },
+    })
+  }
+
+  async findManagers(id: string) {
+    return this.prisma.user.findMany({
+      where:{managerId: id},
       include: {
         entity: true,
       },
