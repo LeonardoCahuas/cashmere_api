@@ -33,7 +33,7 @@ export function getPrismaClient(): PrismaClient {
         },
       },
     })
-
+    
     // Gestione degli eventi di chiusura dell'applicazione per rilasciare le connessioni
     process.on('beforeExit', async () => {
       await prisma?.$disconnect()
@@ -48,12 +48,12 @@ async function bootstrap() {
     app = await NestFactory.create(AppModule)
 
     // Configurazione CORS compatibile con Vercel
-    const allowedOrigins = ["localhost:3000"]//process.env.ALLOWED_ORIGINS?.split(",") || ["https://cashmere-web.vercel.app"]
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["https://cashmere-web.vercel.app"]
 
     app.enableCors({
-      origin: process.env.NODE_ENV === "production"
-        ? allowedOrigins
-        : "http://localhost:3000",
+      origin: process.env.NODE_ENV === "production" 
+        ? allowedOrigins 
+        : "https://cashmere-web.vercel.app",
       methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
       credentials: true,
       allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
@@ -79,7 +79,7 @@ async function bootstrap() {
 
   // Solo per ambiente di sviluppo o quando eseguito direttamente
   if (process.env.NODE_ENV !== "production" || require.main === module) {
-    const port = process.env.PORT || 3005
+    const port = 3005//process.env.PORT || 3005
     await app.listen(port)
     console.log(`✅ Application is running on: http://localhost:${port}`)
   }
@@ -96,7 +96,7 @@ if (require.main === module) {
 export default async function handler(req: any, res: any) {
   const nestApp = await bootstrap()
   const server = nestApp.getHttpAdapter().getInstance()
-
+  
   // Middleware per assicurarsi che le connessioni siano gestite correttamente
   return server(req, res)
 }
