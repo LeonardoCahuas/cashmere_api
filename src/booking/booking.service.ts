@@ -580,7 +580,7 @@ export class BookingService {
   
     // Define operating hours (10:00 to 23:00 Italian time)
     const operatingStartHour = 10
-    const operatingEndHour = 23
+    const operatingEndHour = 22
   
     const result: EngineerAvailability[] = []
   
@@ -1648,6 +1648,7 @@ export class BookingService {
   
     // Start searching from the requested start time (to find closest slots)
     let currentDate = new Date(utcRequestedStart);
+    const currentEnd = new Date(utcRequestedEnd)
     let currentDay = currentDate.getUTCDate();
     console.log(`Initial currentDate: ${currentDate}`);
     console.log(`Initial currentDay: ${currentDay}`);
@@ -1667,12 +1668,15 @@ export class BookingService {
         console.log(`New day: ${currentDate}, daysSearched: ${daysSearched}`);
       }
   
+      
       // If current time is before operating hours, adjust to opening time
       if (currentDate.getUTCHours() < utcOperatingStartHour) {
         console.log("Current time is before operating hours, adjusting...");
         currentDate.setUTCHours(utcOperatingStartHour, 0, 0, 0);
         console.log(`Adjusted to opening time: ${currentDate}`);
       }
+
+      
   
       // Get the day of the week for the current date (UTC-aware)
       const dayOfWeek = currentDate.getUTCDay();
@@ -1769,7 +1773,7 @@ export class BookingService {
           console.log(`Slot start Italian time: ${slotStartItalianHour}:${slotStartItalianMinute}`);
           
           // Check if slot starts at or after max end time (22:00 Italian time)
-          const startsAfterHours = slotStartItalianHour >= maxEndTime;
+          const startsAfterHours = slotStartItalianHour >= maxEndTime
           
           console.log(`Starts after hours? ${startsAfterHours}`);
           
@@ -1790,7 +1794,7 @@ export class BookingService {
           
           // Check if slot ends after max end time (22:00 Italian time)
           const goesAfterHours = slotEndItalianHour > maxEndTime || 
-              (slotEndItalianHour === maxEndTime && slotEndItalianMinute > 0);
+              (slotEndItalianHour === maxEndTime && slotEndItalianMinute > 0) || slotEndItalianHour < operatingStartHour;
           
           console.log(`Goes after hours? ${goesAfterHours}`);
           
