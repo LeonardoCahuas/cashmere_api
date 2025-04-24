@@ -180,7 +180,7 @@ export class UserService {
     return this.prisma.user.findMany({
       where: {
         role: {
-          in: [Role.ENGINEER, Role.SECRETARY, Role.USER], // Seleziona utenti con questi ruoli
+          in: [Role.ENGINEER, Role.SECRETARY, Role.USER, Role.MANAGER], // Seleziona utenti con questi ruoli
         },
       },
       include: {
