@@ -51,10 +51,9 @@ async function bootstrap() {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["https://cashmere-web.vercel.app"]
 
     app.enableCors({
-      origin: /* process.env.NODE_ENV === "production" 
+      origin:  process.env.NODE_ENV === "production" 
         ? allowedOrigins :
-         "https://cashmere-web.vercel.app", */
-        "http://localhost:3000",
+         "https://cashmere-web.vercel.app", 
       methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
       credentials: true,
       allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
