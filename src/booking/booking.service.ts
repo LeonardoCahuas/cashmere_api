@@ -84,13 +84,14 @@ export class BookingService {
         },
         user: data.userId ? { connect: { id: data.userId } } : { connect: { id: "cm8z07nn20003mytvvatk4fvd" } },
         fonico: data.fonicoId ? { connect: { id: data.fonicoId } } : { connect: { id: "cm8z06fn00002mytvfftqrkgx" } },
-        booked_by: userId ? { connect: { id: userId } } : { connect: { id: "cm8z07nn20003mytvvatk4fvd" } },
+        booked_by: { connect: { id: data.booked_by } } ,
       },
       include: {
         services: true,
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
     });
   }
@@ -119,6 +120,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",
@@ -241,6 +243,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",
@@ -324,6 +327,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
     })
 
@@ -371,6 +375,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",
@@ -390,6 +395,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",
@@ -398,18 +404,17 @@ export class BookingService {
   }
 
   async getBookingsByUser(userId: string) {
+    console.log(userId)
     return this.prisma.booking.findMany({
       where: {
-        OR: [
-          { userId: userId },
-          { user: { managerId: userId } }
-        ],
+        user: { id: userId }
       },
       include: {
         services: true,
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",
@@ -435,6 +440,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",
@@ -484,6 +490,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
     });
   }
@@ -729,7 +736,15 @@ export class BookingService {
         services: true,
         studio: true,
         fonico: true,
-        user: true,
+        user: {
+          include: {
+            userManagers: {
+              include: {
+                manager: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         start: "asc",
@@ -756,6 +771,7 @@ export class BookingService {
         studio: true,
         fonico: true,
         user: true,
+        booked_by: true
       },
       orderBy: {
         start: "asc",

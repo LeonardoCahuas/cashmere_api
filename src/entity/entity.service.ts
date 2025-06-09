@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common"
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreateEntityDto, UpdateEntityDto } from "./dto/entity.dto"
 import { BookingFilters } from "../utils/booking-filter.util"
+import { BookingState } from "@prisma/client"
 
 @Injectable()
 export class EntityService {
@@ -125,6 +126,7 @@ export class EntityService {
     // Recupera le prenotazioni in base all'ID dell'entità o dell'utente
     const bookings = await this.prisma.booking.findMany({
       where: {
+        state: BookingState.CONFERMATO,
         user: {
           entityId: entity ? id : undefined,
           id: user ? id : undefined,

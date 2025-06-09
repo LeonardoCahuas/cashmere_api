@@ -17,6 +17,7 @@ export class HolidayService {
         reason:data.reason,
         type:data.type,
         user: { connect: { id: userId } },
+        state: data.state ? data.state : "CONFERMARE"
       },
     })
   }

@@ -43,9 +43,9 @@ export class BookingController {
   @Post()
   async createBooking(
     @Body() dto: CreateBookingDto,
-    @User() user: any = 'cm6ry32iu0000xz076yvedk6k'
+    @User() user: any = 'null'
   ) {
-    return this.bookingService.create(dto, dto.userId)
+    return this.bookingService.create(dto, user)
   }
 
   @Get()

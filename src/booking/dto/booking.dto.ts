@@ -38,7 +38,11 @@ export class CreateBookingDto {
 
   @IsString()
   instagram: string
+
+  @IsString()
+  booked_by: string
 }
+
 
 export class UpdateBookingDto {
   @IsString()

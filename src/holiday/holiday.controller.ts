@@ -49,6 +49,7 @@ export class HolidayController {
   @Delete(":id")
   //@Roles(Role.ENGINEER)
   remove(@Param("id") id: string) {
+    console.log("ci passoo")
     return this.holidayService.remove(id)
   }
 

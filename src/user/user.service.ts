@@ -63,8 +63,21 @@ export class UserService {
   }
 
   async findManagers(id: string) {
+    const relations = await this.prisma.userManager.findMany({
+      where: { managerId: id },
+      include: {
+        user: {
+          include: { entity: true },
+        },
+      },
+    });
+  
+    return relations.map(rel => rel.user);
+  }
+
+  async findAllManagers() {
     return this.prisma.user.findMany({
-      where:{managerId: id},
+      where:{role: Role.MANAGER},
       include: {
         entity: true,
       },
@@ -158,11 +171,20 @@ export class UserService {
   }
 
   async remove(id: string) {
-    const user = await this.findOne(id)
-
+    const user = await this.findOne(id);
+  
+    const DELETED_USER_ID = 'cm8z07nn20003mytvvatk4fvd'; // Inserisci l'ID dell'utente "di sistema"
+  
+    // Step 1: Aggiorna tutte le booking dell’utente
+    await this.prisma.booking.updateMany({
+      where: { bookedById: id },
+      data: { bookedById: DELETED_USER_ID },
+    });
+  
+    // Step 2: Elimina l’utente
     return this.prisma.user.delete({
       where: { id },
-    })
+    });
   }
 
   async findByRole(role: RoleType) {
@@ -176,7 +198,19 @@ export class UserService {
     })
   }
 
-  async findAllUsers() {
+  async findAllUsers(id?: string) {
+    console.log(id)
+    if(id){
+      return this.prisma.user.findMany({
+        where: {
+          //@ts-ignore
+          isSuperAdmin: false
+        },
+        include: {
+          entity: true,
+        },
+      });
+    }
     return this.prisma.user.findMany({
       where: {
         role: {
@@ -188,5 +222,73 @@ export class UserService {
       },
     });
   }
+
+    // 1. Assegna un manager a un utente (aggiunta singola)
+    async assignManagerToUser(userId: string, managerId: string) {
+      // Verifica che entrambi esistano
+      const user = await this.findOne(userId)
+      const manager = await this.findOne(managerId)
   
+      if (!user || !manager) throw new NotFoundException("User or manager not found")
+  
+      // Evita duplicazioni
+      const existing = await this.prisma.userManager.findFirst({
+        where: { userId, managerId }
+      })
+  
+      if (existing) throw new ConflictException("This manager is already assigned to the user")
+  
+      return this.prisma.userManager.create({
+        data: {
+          user: { connect: { id: userId } },
+          manager: { connect: { id: managerId } },
+        }
+      })
+    }
+
+    async getUserManagers(userId: string) {
+      return await this.prisma.userManager.findMany({
+        where: {
+          userId: userId,
+        },
+        include: {
+          manager: true,
+          user: true,
+        },
+      })
+    }
+    
+  
+    // 2. Sostituisce tutti i manager di un utente con una nuova lista
+    async updateUserManagers(userId: string, newManagerIds: string[]) {
+      // Controlla esistenza utente
+      await this.findOne(userId)
+  
+      // Elimina tutti i precedenti
+      await this.prisma.userManager.deleteMany({
+        where: { userId }
+      })
+  
+      // Inserisci i nuovi manager
+      const creates = newManagerIds.map(managerId => ({
+        userId,
+        managerId
+      }))
+  
+      return this.prisma.userManager.createMany({ data: creates })
+    }
+  
+    // 3. Rimuove un manager specifico da un utente
+    async removeManagerFromUser(userId: string, managerId: string) {
+      const existing = await this.prisma.userManager.findFirst({
+        where: { userId, managerId }
+      })
+  
+      if (!existing) throw new NotFoundException("Manager not assigned to this user")
+  
+      return this.prisma.userManager.delete({
+        where: { id: existing.id }
+      })
+    }
+    
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req } from "@nestjs/common"
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req, Query } from "@nestjs/common"
 import { UserService } from "./user.service"
 import { JwtAuthGuard } from "../auth/jwt-auth.guards"
 import { RolesGuard } from "../auth/roles.guards"
@@ -9,7 +9,7 @@ import type { CreateUserDto, RegisterDto, UpdateUserDto } from "./dto/user.dto"
 @Controller("users")
 ////@UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService) { }
 
   @Post()
   //@Roles(Role.ADMIN)
@@ -25,10 +25,18 @@ export class UserController {
   }
 
   @Get("/all")
-  //@Roles(Role.ADMIN)
-  findAllUsers() {
-    return this.userService.findAllUsers()
+  findAllUsers(@Query("id") id: string) { // Change @Param to @Query
+    console.log(id);
+    return this.userService.findAllUsers(id);
   }
+
+  @Get("/managers")
+  //@Roles(Role.ADMIN)
+  findManagers() {
+    return this.userService.findAllManagers()
+  }
+
+
   @Put("/notes/:id")
   async updateBooking(
     @Param("id") id: string,
@@ -88,5 +96,38 @@ export class UserController {
   @Get("role/user")
   findUsers() {
     return this.userService.findByRole(Role.USER)
+  }
+
+  // 1. Assegna un manager a un utente (aggiunta singola)
+  @Post("/assign-manager/:userId/:managerId")
+  assignManagerToUser(
+    @Param("userId") userId: string,
+    @Param("managerId") managerId: string,
+  ) {
+    return this.userService.assignManagerToUser(userId, managerId);
+  }
+
+  // 2. Sostituisce tutti i manager di un utente con una nuova lista
+  @Put("/update-managers/:userId")
+  updateUserManagers(
+    @Param("userId") userId: string,
+    @Body() body: { managerIds: string[] },
+  ) {
+    return this.userService.updateUserManagers(userId, body.managerIds);
+  }
+
+  // 3. Rimuove un manager specifico da un utente
+  @Delete("/remove-manager/:userId/:managerId")
+  removeManagerFromUser(
+    @Param("userId") userId: string,
+    @Param("managerId") managerId: string,
+  ) {
+    return this.userService.removeManagerFromUser(userId, managerId);
+  }
+
+  @Get("/user-managers/:id")
+  //@Roles(Role.ADMIN)
+  findUserManagers(@Param("id") id: string) {
+    return this.userService.getUserManagers(id)
   }
 }
